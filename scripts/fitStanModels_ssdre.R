@@ -39,6 +39,10 @@ stan.data = list(y = log(dat$RT),
                    summarize(beta.loc = quantile(first.correct,.85)) %>%
                    .$beta.loc
 )
+# For execution on a local, multicore CPU with excess RAM we recommend calling
+options(mc.cores = parallel::detectCores())
+# To avoid recompilation of unchanged Stan programs, we recommend calling
+rstan_options(auto_write = TRUE)
 
 fit.ps <- stan(
   file = './procShiftModel.stan',

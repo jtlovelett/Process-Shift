@@ -1,0 +1,217 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r setup}
+library(tidyverse)
+library(JTL)
+library(forcats)
+knitr::opts_chunk$set(echo = F, message = F, warning = F)
+rm(list=ls())
+
+path='~/Documents/UCSD/Research/Process Shift/'
+dat = read.csv(paste0(path,'data/proc_shif_data.csv')) %>%
+  transmute(subject = su,
+            trial = bl,
+            first.correct.trial.item = first,
+            trials.since.1st.correct = bl_r,
+            reversions = ifelse(itype == 1, F,T),
+            item,
+            strategy = ifelse(strat==1, 'algorithm','retrieval'),
+            RT)
+```
+
+# Data Generation
+Note: this is simplified for now, just generating the actual function, with no noise. That will come in the hierarchical phase. 
+
+```{r set options}
+A = 250 # say minimum RT is 250 ms  ## alpha'
+B = 1500 # starting RT is 2500 ms slower than asymptote ## beta
+N = 1:250 # number of trials
+r = .05 # learning rate... play around with it
+t = .5 # tau -- controls delay
+``` 
+
+```{r basic plot function}
+learnPlot = function(f,a,b,n,r,t=0){
+  list(data <- 
+         expand.grid(N=n,
+                     alpha=a, 
+                     beta = b,
+                     rate = r,
+                     tau = t) %>%
+         mutate(RT = f(a,b,n,r,t)),
+       
+       params = list(
+         nTrials = max(n),
+         model = as.character(substitute(f)),
+         alpha = a, #paste0('{',paste(a,collapse =','),'}'),
+         beta = b, #paste0('{',paste(b,collapse =','),'}'),
+         learn.rate = r, #paste0('{',paste(r,collapse =','),'}'),
+         tau = t), #paste0('{',paste(t,collapse =','),'}')
+       
+       agg.plot = data %>% 
+         ggplot(aes(x=N, y = RT))+
+         geom_line()+
+         geom_point()+
+         theme_linedraw()
+  )
+}
+
+```
+
+``` {r (Delayed) Power}
+# reduces to standard power when tau (t) == 0
+power = function(a,b,n,r,t=0){
+  a+ b* ((t+1)/(t+n^r))
+}
+
+learnPlot(power, A,B,N,r,t)
+```
+
+```{r (Delayed) Exponential}
+# reduces to standard exponential when tau (t) == 0
+
+exponential = function(a,b,n,r,t=0){
+  a+ b* ((t+1)/(t+exp(r*N)))
+}
+learnPlot(exponential, A,B,N,r,t)
+```
+
+
+
+```{r individual data}
+#s = sample(unique(dat$subject,1))
+
+sub_plot = dat %>%
+  ggplot(aes(x = trial, y = log10(RT), color = strategy, group=strategy))+
+  geom_line()+
+  geom_point()+
+  #geom_vline(aes(xintercept=first.correct.trial.item))+
+  facet_grid(subject~item)
+
+sub_plot %>% ggsave(filename='plot1.log.pdf',path=path, width = 25, height = 40, device= 'pdf')
+```
+
+```{r stan}
+library(rstan)
+stan.data = list(y = log10(dat$RT), 
+                 strategy = as.integer(dat$strategy == 'retrieval')+1,
+                 item = as.numeric(as.factor(dat$item)),
+                 subject = as.numeric(as.factor(dat$subject)),
+                 trial = dat$item,
+                 N = nrow(dat),
+                 nc = length(unique(dat$strategy)),
+                 ni = length(unique(dat$item)),
+                 ns = length(unique(dat$subject)),
+                 nt = length(unique(dat$trial))
+                 )
+# model notes:
+# If strat==algorithm:
+  # RT ~ N(mu_subj_item, var_subj_item) ## single trial 
+    # mu_subj_item ~ N(mu_subj.hyprior.mu, var_subj.hyprior.var)  ## subject level mean
+      # mu_subj.hyprior.mu ~ N(7000, 10^6) # hyperprior over subject means
+      # var_subj.hyprior.var ~ N(10^5, 10^9)# hyperprior over subject vars
+    # var_subj.item = N(var_subj.hyprior.mu, var_subj.hyprior.var) ## subject level var
+      # var_subj.hyprior.mu ~ N(7000, 10^6)
+      # var_subj.hyprior.var ~ N(10^5, 10^9)
+# else strat = retreival:
+  # ... 
+
+mod <- '
+data {
+  int<lower=0> N;
+  int<lower=0> ni;
+  int<lower=0> ns;
+  int<lower=0> nt;
+  int<lower=0> nc;
+  real<lower=0> y[N];
+  int<lower=0> strategy[N];
+  int<lower=0> item[N];
+  int<lower=0> subject[N];
+  int<lower=0> trial[N];
+}
+parameters {
+  real ec[nc];
+  real es[ns];
+  real ei[ni];
+  real sigma_c;
+  real sigma_i;
+  real sigma_s;
+  real mu;
+  real<lower=0> sigma;
+}
+model {
+  mu ~ normal(3, 1);
+  sigma ~ exponential(0.01);
+  sigma_c ~ exponential(0.01);
+  sigma_i ~ exponential(0.01);
+  sigma_s ~ exponential(0.01);
+  ec ~ normal(0, sigma_c);
+  es ~ normal(0, sigma_c);
+  ei ~ normal(0, sigma_c);
+  y ~ normal(mu+ec[strategy]+es[subject]+ei[item], sigma);
+
+}
+'
+
+fit <- stan(
+  # file = stan.file,   
+  model_code = mod,  # Stan program
+  data = stan.data,    # named list of data
+  chains = 4,             # number of Markov chains
+  warmup = 100,          # number of warmup iterations per chain
+  iter = 1000,            # total number of iterations per chain
+  cores = 1,              # number of cores (using 2 just for the vignette)
+  refresh = 100          # show progress every 'refresh' iterations
+)
+
+samples <- extract(fit) %>% as.data.frame()
+c(mean(log10(dat$RT)), sd(log10(dat$RT)))
+samples %>% summarise_all(mean)
+samples %>% ggplot(aes(x=1:nrow(samples), y=mu))+geom_point()
+
+
+
+
+# diagnostics:
+# - trace plot
+# - shape
+# - 
+#
+# mu_subj.hyprior.mu ~ N(7000, 10^6);
+# var_subj.hyprior.var ~ N(10^5, 10^9);
+# mu_subj_item ~ N(mu_subj.hyprior.mu, var_subj.hyprior.var);
+# 
+# 
+# var_subj.hyprior.mu ~ N(7000, 10^6)
+# var_subj.hyprior.var ~ N(10^5, 10^9)
+# var_subj.item = N(var_subj.hyprior.mu, var_subj.hyprior.var)
+# 
+# RT ~ N(mu_subj_item, var_subj_item) ## single trial 
+
+
+## Example:
+# stan.code = '
+# data {
+# int<lower=0> N; // number of data points
+# real x[N]; // observed X
+# int g[N];
+# int K; // number of groups
+# }
+# parameters {
+# real mu[K]; 
+# real<lower=0> sigma[K];
+# real<lower=0> tau;
+# real gmu;
+# }
+# model {
+# sigma ~ exponential(2);
+# tau ~ exponential(2);
+# mu ~ normal(gmu, tau);
+# x ~ normal(mu[g], sigma[g]);
+# }
+# '
+```
+

@@ -47,7 +47,7 @@ fit.ps <- stan(
   chains = 4,             # number of Markov chains
   warmup = 1000,          # number of warmup iterations per chain
   iter = 3000,            # total number of iterations per chain
-  cores = 8,              # number of cores
+  cores = 4,              # number of cores
   refresh = 250          # show progress every 'refresh' iterations
 )
 
@@ -59,7 +59,7 @@ fit.de <- stan(
   chains = 4,             # number of Markov chains
   warmup = 1000,          # number of warmup iterations per chain
   iter = 3000,            # total number of iterations per chain
-  cores = 8,              # number of cores
+  cores = 4,              # number of cores
   refresh = 250          # show progress every 'refresh' iterations
 )
 

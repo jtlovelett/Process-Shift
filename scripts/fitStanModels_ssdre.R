@@ -57,7 +57,7 @@ fit.ps <- stan(
 
 
 fit.de <- stan(
-  file = paste0(path, './delayedExp.stan'),
+  file = './delayedExp.stan',
   #model_code = mod,  # Stan program
   data = stan.data,    # named list of data
   chains = 4,             # number of Markov chains

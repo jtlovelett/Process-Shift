@@ -53,8 +53,7 @@ fit.ps <- stan(
   iter = 3000,            # total number of iterations per chain
   cores = 4,              # number of cores
   refresh = 250,          # show progress every 'refresh' iterations
-  adapt_delta = .9,
-  max_treedepth = 20
+  control = list(adapt_delta = 0.99,  max_treedepth = 15)
 )
 
 
@@ -67,8 +66,8 @@ fit.de <- stan(
   iter = 3000,            # total number of iterations per chain
   cores = 4,              # number of cores
   refresh = 250,          # show progress every 'refresh' iterations
-  adapt_delta = .9,
-  max_treedepth = 20
+  control = list(adapt_delta = 0.99,  max_treedepth = 15)
+
 )
 
 #samples <- extract(fit) %>% as.data.frame()

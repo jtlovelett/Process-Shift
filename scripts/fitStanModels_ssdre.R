@@ -52,7 +52,9 @@ fit.ps <- stan(
   warmup = 1000,          # number of warmup iterations per chain
   iter = 3000,            # total number of iterations per chain
   cores = 4,              # number of cores
-  refresh = 250          # show progress every 'refresh' iterations
+  refresh = 250,          # show progress every 'refresh' iterations
+  adapt_delta = .9,
+  max_treedepth = 20
 )
 
 
@@ -64,7 +66,9 @@ fit.de <- stan(
   warmup = 1000,          # number of warmup iterations per chain
   iter = 3000,            # total number of iterations per chain
   cores = 4,              # number of cores
-  refresh = 250          # show progress every 'refresh' iterations
+  refresh = 250,          # show progress every 'refresh' iterations
+  adapt_delta = .9,
+  max_treedepth = 20
 )
 
 #samples <- extract(fit) %>% as.data.frame()
@@ -99,7 +103,8 @@ sub.item.plot = pred.dat %>%
   facet_grid(subject~item)
 
 
-sub_plot %>% ggsave(filename='subj.plot.preds_ps&de.pdf',path='../plots/', width = 25, height = 40, device= 'pdf')
+sub.item.plot %>% ggsave(filename='mostRecentSubj.plot.preds_ps&de.pdf',path='../plots/', width = 25, height = 40, device= 'pdf')
+
+save.image(paste0('../large_data/ps&de_stanoutput',date(),'.rdata'))
 
 save(list = c('pred.dat','sub.item.plot'), file = '../data/mostRecentPredDat&Plot.rdata')
-save.image(paste0('../large_data/ps&de_stanoutput',date(),'.rdata'))

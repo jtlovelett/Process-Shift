@@ -1,0 +1,107 @@
+---
+title: "Hierarchical Bayesian Models of RT speedup"
+author: "Jarrett Lovelett"
+date: "7/2/2018"
+output: html_document
+---
+
+# Overview  
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(lubridate)
+rm(list=ls())
+```
+
+```{r load data & pre-process}
+load('../data/mostRecentPredDat_PS.rdata')
+load('../data/mostRecentPredDat_DE.rdata')
+
+pred.dat = pred.dat.ps %>% 
+  left_join(pred.dat.de)
+
+load('../data/mostRecentPredDat_PS_noRevert.rdata')
+load('../data/mostRecentPredDat_DE_noRevert.rdata')
+pred.dat.noRevert = pred.dat.ps.noRevert %>% 
+  left_join(pred.dat.de.noRevert)
+
+rm(pred.dat.ps, pred.dat.de, pred.dat.ps.noRevert, pred.dat.de.noRevert)
+```
+
+# Plots
+
+## Including Reversion Trials
+
+```{r make subject-item plots and save }
+# NOTE: overwrites current version
+sub.plot = pred.dat %>%
+         mutate(strategy = as.factor(strategy),
+                item = as.factor(item)) %>%
+  ggplot(aes(x = trial, color = strategy, group=strategy))+
+  geom_point(aes(y=logRT))+
+  # geom_line(aes(y=pred.logRT.delExp), color = 'green')+
+  geom_line(aes(y=pred.logRT.ps), color = 'blue')+
+  geom_vline(aes(xintercept=first.correct.trial.item))+
+  facet_grid(subject~item)
+
+sub.plot %>%  ggsave(filename=paste0('subj-item_',now(),'.pdf'),path='../plots/', width = 25, height = 40, device= 'pdf')
+
+sub.plot
+```
+
+## Excluding Reversion Trials
+
+```{r make subject-item plots and save }
+# NOTE: overwrites current version
+sub.plot.noRevert = pred.dat.noRevert %>%
+         mutate(strategy = as.factor(strategy),
+                item = as.factor(item)) %>%
+  ggplot(aes(x = trial, color = strategy, group=strategy))+
+  geom_point(aes(y=logRT))+
+  # geom_line(aes(y=pred.logRT.delExp), color = 'green')+
+  geom_line(aes(y=pred.logRT.ps), color = 'blue')+
+  geom_vline(aes(xintercept=first.correct.trial.item))+
+  facet_grid(subject~item)
+
+sub.plot.noRevert %>%  ggsave(filename=paste0('subj-item_noRevert',now(),'.pdf'),path='../plots/', width = 25, height = 40, device= 'pdf')
+
+sub.plot.noRevert
+```
+
+# Model Comparison
+
+## R^2
+
+```{r Model Comparison: R^2}
+# R^2_adj = 1 - { [(1-R^2)(n-1)] / (n-k-1) }
+
+# does this account for offsets too? or just overall?
+k.ps = 3 # Alg_M, Ret_B, Ret_T = 3 (plus eventual P(shift) param theta)
+k.de = 4 # alpha, beta, tau, r = 4
+
+# note: if num params includes the hierarchical nature of params, be careful of potentially poorly-behaved adj r^2 when k >> 1 
+r2.adj = function(x, y, k){
+  n = length(x)
+  if(n != length(y)){
+    stop("x and y have different lengths!")
+  }
+  r2 = cor(x,y)^2
+  1 - (1-r2) * ( (n-1)/(n-k-1) )
+}
+
+r2.results = c(ps = with(pred.dat, r2.adj(logRT,pred.logRT.ps,k.ps)),
+               de = with(pred.dat, r2.adj(logRT,pred.logRT.de,k.de)),
+               ps.noRever = with(pred.dat.noRevert, 
+                                 r2.adj(logRT, pred.logRT.ps, k.ps)),
+               de.noRever = with(pred.dat.noRevert, 
+                                 r2.adj(logRT, pred.logRT.de, k.ps)))
+r2.results
+```
+
+## WAIC
+```{r}
+# ??? 
+## add stuff here to do formal model comparison with WAIC
+```
+

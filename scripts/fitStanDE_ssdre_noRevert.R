@@ -62,12 +62,12 @@ fit.de <- stan(
   file = './delayedExp.stan',
   #model_code = mod,  # Stan program
   data = stan.data,    # named list of data
-  chains = 4,             # number of Markov chains
+  chains = 2,             # number of Markov chains
   warmup = 1000,          # number of warmup iterations per chain
   iter = 3000,            # total number of iterations per chain
   cores = 4,              # number of cores
   refresh = 250,          # show progress every 'refresh' iterations
-  control = list(adapt_delta = 0.99,  max_treedepth = 15)
+  control = list(adapt_delta = 0.9,  max_treedepth = 12)
 )
 
 #samples <- extract(fit) %>% as.data.frame()

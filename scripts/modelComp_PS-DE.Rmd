@@ -91,11 +91,12 @@ r2.adj = function(x, y, k){
 }
 
 r2.results = c(ps = with(pred.dat, r2.adj(logRT,pred.logRT.ps,k.ps)),
-               de = with(pred.dat, r2.adj(logRT,pred.logRT.de,k.de)),
+               #de = with(pred.dat, r2.adj(logRT,pred.logRT.de,k.de)),
                ps.noRever = with(pred.dat.noRevert, 
-                                 r2.adj(logRT, pred.logRT.ps, k.ps)),
-               de.noRever = with(pred.dat.noRevert, 
-                                 r2.adj(logRT, pred.logRT.de, k.ps)))
+                                 r2.adj(logRT, pred.logRT.ps, k.ps))#,
+               #de.noRever = with(pred.dat.noRevert, 
+                                 #r2.adj(logRT, pred.logRT.de, k.ps))
+               )
 r2.results
 ```
 

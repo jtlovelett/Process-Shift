@@ -126,3 +126,9 @@ model {
 
   y ~ normal(y_hat, sigma); # y_hat coming back nan ... why? (location parameter)
 }
+generated quantities {
+  vector[N] logLik; 
+  for(n in 1:N){
+    logLik[n] = normal_lpdf(y[n] | y_hat[n], sigma[n])
+  }
+}

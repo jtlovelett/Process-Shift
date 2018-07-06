@@ -129,6 +129,6 @@ model {
 generated quantities {
   vector[N] logLik; 
   for(n in 1:N){
-    logLik[n] = normal_lpdf(y[n] | y_hat[n], sigma[n])
+    logLik[n] = normal_lpdf(y[n] | y_hat[n], sigma[n]);
   }
 }

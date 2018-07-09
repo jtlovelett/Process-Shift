@@ -50,17 +50,18 @@ parameters {
 }
 
 transformed parameters {  
-  real log_Alpha[N];
-  real log_Beta[N];
-  real Tau[N];
-  real Rate[N];
   real y_hat[N];
+  real log_Alpha;
+  real log_Beta;// = B + B_es[subject[i]] + B_ei[item[i]] + B_esi[subject[i], item[i]];
+  real Rate;// = R + R_es[subject[i]] + R_ei[item[i]] + R_esi[subject[i], item[i]];
+  real Tau;// = T + T_es[subject[i]] + T_ei[item[i]] + T_esi[subject[i], item[i]];
+
   for(i in 1:N){ 
-    log_Alpha[i] = A + A_es[subject[i]] + A_ei[item[i]] + A_esi[subject[i], item[i]];
-    log_Beta[i] = B + B_es[subject[i]] + B_ei[item[i]] + B_esi[subject[i], item[i]];
-    Rate[i] = R + R_es[subject[i]] + R_ei[item[i]] + R_esi[subject[i], item[i]];
-    Tau[i] = T + T_es[subject[i]] + T_ei[item[i]] + T_esi[subject[i], item[i]];
-    Tau[i] = exp(Tau[i]*Rate[i]);
+    log_Alpha = A + A_es[subject[i]] + A_ei[item[i]] + A_esi[subject[i], item[i]];
+    log_Beta = B + B_es[subject[i]] + B_ei[item[i]] + B_esi[subject[i], item[i]];
+    Rate = R + R_es[subject[i]] + R_ei[item[i]] + R_esi[subject[i], item[i]];
+    Tau = T + T_es[subject[i]] + T_ei[item[i]] + T_esi[subject[i], item[i]];
+    Tau = exp(Tau*Rate);
     // print(log_Alpha[i]);
     // print(log_Beta[i]);
     // print(Tau[i]);
@@ -68,7 +69,7 @@ transformed parameters {
     // print(exp(log_Alpha[i]) + exp(log_Beta[i]) * (Tau[i]+1) / (Tau[i] + trial[i]^Rate[i]));
     // print(log(exp(log_Alpha[i]) + exp(log_Beta[i]) * (Tau[i]+1) / (Tau[i] + trial[i]^Rate[i])));
     // print("");
-    y_hat[i] =  log(exp(log_Alpha[i]) + exp(log_Beta[i]) * (Tau[i]+1) / (Tau[i] + trial[i]^Rate[i]));
+    y_hat[i] =  log(exp(log_Alpha) + exp(log_Beta) * (Tau+1) / (Tau + trial[i]^Rate));
   }
 }
 
@@ -124,7 +125,8 @@ model {
       T_esi[i,j] ~ normal(0, sigma_T_esi);
   }
 
-  y ~ normal(y_hat, sigma); # y_hat coming back nan ... why? (location parameter)
+
+  y ~ normal(y_hat, sigma); 
 }
 generated quantities {
   vector[N] logLik; 

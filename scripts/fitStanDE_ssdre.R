@@ -16,7 +16,8 @@ dat = read.csv('../data/proc_shif_data.csv') %>%
             strategy = ifelse(strat==1, 'algorithm','retrieval'),
             is.alg = ifelse(strategy == 'algorithm', 1, 0),
             is.ret = ifelse(strategy == 'retrieval', 1 , 0),
-            RT)
+            RT)# %>%
+  #filter(item == 20, subject == 44)
 
 stan.data = list(y = log(dat$RT), 
                  strategy = as.integer(dat$strategy == 'retrieval')+1,
@@ -62,8 +63,8 @@ fit.de <- stan(
   #model_code = mod,  # Stan program
   data = stan.data,    # named list of data
   chains = 4,             # number of Markov chains
-  warmup = 500,          # number of warmup iterations per chain
-  iter = 2500,            # total number of iterations per chain
+  warmup = 1500,          # number of warmup iterations per chain
+  iter = 3500,            # total number of iterations per chain
   cores = 4,              # number of cores
   refresh = 250,          # show progress every 'refresh' iterations
   control = list(adapt_delta = 0.9,  max_treedepth = 12)
@@ -104,6 +105,6 @@ for(row in 1:nrow(pred.dat.de)){
 
 save(list = c('pred.dat.de'), file = '../data/mostRecentPredDat.rdata')
 
-save.image(paste0('../large_data/stanoutput_de_',date(),'.rdata'))
+save.image(paste0('../large_data/stanoutput_de_',base::date(),'.rdata'))
 
 

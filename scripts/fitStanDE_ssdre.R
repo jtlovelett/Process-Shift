@@ -103,7 +103,7 @@ for(row in 1:nrow(pred.dat.de)){
 
 # sub.item.plot %>% ggsave(filename='mostRecentSubj.plot.preds_ps&de.pdf',path='../plots/', width = 25, height = 40, device= 'pdf')
 
-save(list = c('pred.dat.de'), file = '../data/mostRecentPredDat.rdata')
+save(list = c('pred.dat.de'), file = '../data/mostRecentPredDat_DE.rdata')
 
 save.image(paste0('../large_data/stanoutput_de_',base::date(),'.rdata'))
 

@@ -8,7 +8,7 @@ output: html_document
 # Overview  
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = F, warning = F, message=F)
 library(tidyverse)
 library(lubridate)
 library(rstan)
@@ -35,17 +35,18 @@ rm(pred.dat.ps, pred.dat.de, pred.dat.ps.noRevert, pred.dat.de.noRevert)
 
 ## Including Reversion Trials
 
-```{r make plots if reversions }
+```{r make plots if reversions, fig.height=40, fig.width=25 }
 # NOTE: overwrites current version
 sub.plot = pred.dat %>%
          mutate(strategy = as.factor(strategy),
                 item = as.factor(item)) %>%
-  ggplot(aes(x = trial, color = strategy, group=strategy))+
+  ggplot(aes(x = trial, color = strategy))+
   geom_point(aes(y=logRT))+
   geom_line(aes(y=pred.logRT.de), color = 'green')+
   geom_line(aes(y=pred.logRT.ps), color = 'blue')+
   geom_vline(aes(xintercept=first.correct.trial.item))+
-  facet_grid(subject~item)
+  facet_grid(subject~item)+
+  theme_linedraw()
 
 sub.plot %>%  ggsave(filename=paste0('subj-item_',now(),'.pdf'),path='../plots/', width = 25, height = 40, device= 'pdf')
 
@@ -54,17 +55,18 @@ sub.plot
 
 ## Excluding Reversion Trials
 
-```{r make plots if no reversions }
+```{r make plots if no reversions, fig.height=40, fig.width=25 }
 # NOTE: overwrites current version
 sub.plot.noRevert = pred.dat.noRevert %>%
          mutate(strategy = as.factor(strategy),
                 item = as.factor(item)) %>%
-  ggplot(aes(x = trial, color = strategy, group=strategy))+
+  ggplot(aes(x = trial, color = strategy))+
   geom_point(aes(y=logRT))+
   geom_line(aes(y=pred.logRT.de), color = 'green')+
   geom_line(aes(y=pred.logRT.ps), color = 'blue')+
   geom_vline(aes(xintercept=first.correct.trial.item))+
-  facet_grid(subject~item)
+  facet_grid(subject~item)+
+  theme_linedraw()
 
 sub.plot.noRevert %>%  ggsave(filename=paste0('subj-item_noRevert',now(),'.pdf'),path='../plots/', width = 25, height = 40, device= 'pdf')
 
@@ -93,7 +95,7 @@ r2.adj = function(x, y, k){
 }
 
 r2.results = c(ps = with(pred.dat, r2.adj(logRT,pred.logRT.ps,k.ps)),
-               #de = with(pred.dat, r2.adj(logRT,pred.logRT.de,k.de)),
+               de = with(pred.dat, r2.adj(logRT,pred.logRT.de,k.de)),
                ps.noRever = with(pred.dat.noRevert, 
                                  r2.adj(logRT, pred.logRT.ps, k.ps)),
                de.noRever = with(pred.dat.noRevert, 
@@ -107,35 +109,46 @@ r2.results
 # http://mc-stan.org/loo/articles/loo2-example.html
 # If we had written our own Stan program instead of using rstanarm we would pass an array or matrix of log-liklihood values to the loo function (see, e.g. help("loo.array", package = "loo"))
 
-load('../large_data/stanoutput_ps_Mon Jul  2 12:07:07 2018.rdata')
+# PS log likelihood / waic
+load('../large_data/stanoutput_ps_Thu Jul 12 16:03:12 2018.rdata')
 log.lik.ps = extract_log_lik(fit.ps, parameter_name = "logLik", merge_chains = TRUE)
 waic.ps = waic(log.lik.ps)
 waic.loo.ps = loo(log.lik.ps)
 rm(fit.ps)
 
-load('../large_data/stanoutput_ps_noRevertMon Jul  2 22:18:12 2018.rdata')
+# PS (no reversions) log likelihood / waic
+load('../large_data/stanoutput_ps_noRevertThu Jul 12 18:55:11 2018.rdata')
+#load('../large_data/stanoutput_ps_noRevertThu Jul 12 17:39:10 2018.rdata')
 log.lik.ps.nr = extract_log_lik(fit.ps, parameter_name = "logLik", merge_chains = TRUE)
 waic.ps.nr = waic(log.lik.ps.nr)
 waic.loo.ps.nr = loo(log.lik.ps.nr)
 rm(fit.ps)
 
+# DE log likelihood / waic
 load('../large_data/stanoutput_de_Tue Jul 10 19:54:11 2018.rdata')
 log.lik.de = extract_log_lik(fit.de, parameter_name = "logLik", merge_chains = TRUE)
 waic.de = waic(log.lik.de)
 waic.loo.de = loo(log.lik.de)
 rm(fit.de)
 
-load('../large_data/stanoutput_de_noRevertWed Jul 11 01/20/43 2018.rdata')
-log.lik.de.nr = extract_log_lik(fit.de, parameter_name = "logLik", merge_chains = T RUE)
+# DE (no reversions) log likelihood / waic
+load('../large_data/stanoutput_de_noRevertWed Jul 11 01:20:43 2018.rdata')
+log.lik.de.nr = extract_log_lik(fit.de, parameter_name = "logLik", merge_chains = TRUE)
 waic.de.nr = waic(log.lik.de.nr)
 waic.loo.de.nr = loo(log.lik.de.nr)
 rm(fit.de)
 
 waics = data_frame(model = c('PS','PS_noRevert','DE','DE_noRevert'),
-                   waic = c(waic.ps, waic.ps.nr, NA,waic.de.nr),
-                   waic_loo = c(waic.loo.ps, waic.loo.ps.nr, NA, waic.loo.de.nr))
+                   waic = c(waic.ps$estimates['waic','Estimate'],
+                            waic.ps.nr$estimates['waic','Estimate'],
+                            waic.de$estimates['waic','Estimate'],
+                            waic.de.nr$estimates['waic','Estimate']),
+                   waic_loo = c(waic.loo.ps$estimates['looic','Estimate'], 
+                                waic.loo.ps.nr$estimates['looic','Estimate'], 
+                                waic.loo.de$estimates['looic','Estimate'], 
+                                waic.loo.de.nr$estimates['looic','Estimate']))
 
-kable::waics
+knitr::kable(waics)
 
 ```
 

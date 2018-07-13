@@ -18,10 +18,10 @@ rm(list=ls())
 
 ```{r load data & pre-process}
 load('../data/mostRecentPredDat_PS.rdata')
-#load('../data/mostRecentPredDat_DE.rdata')
+load('../data/mostRecentPredDat_DE.rdata')
 
-pred.dat = pred.dat.ps #%>% 
-  #left_join(pred.dat.de)
+pred.dat = pred.dat.ps %>% 
+  left_join(pred.dat.de)
 
 load('../data/mostRecentPredDat_PS_noRevert.rdata')
 load('../data/mostRecentPredDat_DE_noRevert.rdata')
@@ -35,14 +35,14 @@ rm(pred.dat.ps, pred.dat.de, pred.dat.ps.noRevert, pred.dat.de.noRevert)
 
 ## Including Reversion Trials
 
-```{r make subject-item plots and save }
+```{r make plots if reversions }
 # NOTE: overwrites current version
 sub.plot = pred.dat %>%
          mutate(strategy = as.factor(strategy),
                 item = as.factor(item)) %>%
   ggplot(aes(x = trial, color = strategy, group=strategy))+
   geom_point(aes(y=logRT))+
-  # geom_line(aes(y=pred.logRT.delExp), color = 'green')+
+  geom_line(aes(y=pred.logRT.de), color = 'green')+
   geom_line(aes(y=pred.logRT.ps), color = 'blue')+
   geom_vline(aes(xintercept=first.correct.trial.item))+
   facet_grid(subject~item)
@@ -54,7 +54,7 @@ sub.plot
 
 ## Excluding Reversion Trials
 
-```{r make subject-item plots and save }
+```{r make plots if no reversions }
 # NOTE: overwrites current version
 sub.plot.noRevert = pred.dat.noRevert %>%
          mutate(strategy = as.factor(strategy),
@@ -106,26 +106,36 @@ r2.results
 ```{r}
 # http://mc-stan.org/loo/articles/loo2-example.html
 # If we had written our own Stan program instead of using rstanarm we would pass an array or matrix of log-liklihood values to the loo function (see, e.g. help("loo.array", package = "loo"))
+
 load('../large_data/stanoutput_ps_Mon Jul  2 12:07:07 2018.rdata')
-log.lik.ps = extract_log_lik(fit.ps, parameter_name = "y_hat", merge_chains = TRUE)
+log.lik.ps = extract_log_lik(fit.ps, parameter_name = "logLik", merge_chains = TRUE)
 waic.ps = waic(log.lik.ps)
 waic.loo.ps = loo(log.lik.ps)
 rm(fit.ps)
+
 load('../large_data/stanoutput_ps_noRevertMon Jul  2 22:18:12 2018.rdata')
-log.lik.ps.nr = extract_log_lik(fit.ps, parameter_name = "y_hat", merge_chains = TRUE)
+log.lik.ps.nr = extract_log_lik(fit.ps, parameter_name = "logLik", merge_chains = TRUE)
 waic.ps.nr = waic(log.lik.ps.nr)
 waic.loo.ps.nr = loo(log.lik.ps.nr)
-
 rm(fit.ps)
-load('../large_data/stanoutput_de_noRevertWed Jul  4 16:11:32 2018.rdata')
-log.lik.de.nr = extract_log_lik(fit.de, parameter_name = "y_hat", merge_chains = TRUE)
-waic.de.nr = waic(log.lik.de.nr)
-waic.loo.de.nr = loo(log.lik.de.nr)
 
+load('../large_data/stanoutput_de_Tue Jul 10 19:54:11 2018.rdata')
+log.lik.de = extract_log_lik(fit.de, parameter_name = "logLik", merge_chains = TRUE)
+waic.de = waic(log.lik.de)
+waic.loo.de = loo(log.lik.de)
 rm(fit.de)
 
+load('../large_data/stanoutput_de_noRevertWed Jul 11 01/20/43 2018.rdata')
+log.lik.de.nr = extract_log_lik(fit.de, parameter_name = "logLik", merge_chains = T RUE)
+waic.de.nr = waic(log.lik.de.nr)
+waic.loo.de.nr = loo(log.lik.de.nr)
+rm(fit.de)
 
+waics = data_frame(model = c('PS','PS_noRevert','DE','DE_noRevert'),
+                   waic = c(waic.ps, waic.ps.nr, NA,waic.de.nr),
+                   waic_loo = c(waic.loo.ps, waic.loo.ps.nr, NA, waic.loo.de.nr))
 
+kable::waics
 
 ```
 

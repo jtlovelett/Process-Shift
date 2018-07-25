@@ -17,7 +17,12 @@ dat = read.csv('../data/proc_shif_data.csv') %>%
             is.alg = ifelse(strategy == 'algorithm', 1, 0),
             is.ret = ifelse(strategy == 'retrieval', 1 , 0),
             RT) %>%
-  filter(reversions == F)
+  filter(reversions == F) %>%
+  mutate(subject = as.numeric(as.factor(subject)),
+         item = as.numeric(as.factor(item)))
+
+source('./mk_sparse_sub-item_matrix.R')
+si.lookup = siMat(dat)
 
 stan.data = list(y = log(dat$RT), 
                  strategy = as.integer(dat$strategy == 'retrieval')+1,
@@ -30,6 +35,7 @@ stan.data = list(y = log(dat$RT),
                  nc = length(unique(dat$strategy)),
                  ni = length(unique(dat$item)),
                  ns = length(unique(dat$subject)),
+                 nsi = nrow(dat %>% count(subject, item)),
                  nt = length(unique(dat$trial)),
                  # Find a reasonable location for beta:
                  # 85th %ile of subject*item first correct retrieval trial (ok?)
@@ -38,7 +44,8 @@ stan.data = list(y = log(dat$RT),
                    summarize(first.correct = mean(first.correct.trial.item)) %>%
                    ungroup() %>%
                    summarize(beta.loc = quantile(first.correct,.85)) %>%
-                   .$beta.loc
+                   .$beta.loc,
+                 si_lookup = si.lookup
 )
 # For execution on a local, multicore CPU with excess RAM we recommend calling
 options(mc.cores = parallel::detectCores())

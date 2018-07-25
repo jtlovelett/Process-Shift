@@ -2,6 +2,8 @@ data {
   int<lower=0> N; // num observations
   int<lower=0> ni; // num items
   int<lower=0> ns; // num subjects
+  int<lower=0> nsi; // num subject-item combos
+  int<lower=0> si_lookup[ns, ni]; // lookup table for sparsely coded subject-item offsets
   int<lower=0> nt; // num trials
   int<lower=0> nc; // num strategies
   real<lower=0> y[N]; // log RT 
@@ -15,7 +17,8 @@ parameters {
   real A; 
   real A_es[ns]; 
   real A_ei[ni]; 
-  real A_esi[ns,ni]; 
+  //real A_esi[ns,ni]; 
+  real A_esi[nsi];
   real<lower=0> sigma_A_ei;
   real<lower=0> sigma_A_es; 
   real<lower=0> sigma_A_esi; 
@@ -23,7 +26,8 @@ parameters {
   real B;
   real B_es[ns]; 
   real B_ei[ni]; 
-  real B_esi[ns,ni]; 
+  //real B_esi[ns,ni]; 
+  real B_esi[nsi]; 
   real<lower=0> sigma_B_ei; 
   real<lower=0> sigma_B_es; 
   real<lower=0> sigma_B_esi; 
@@ -31,7 +35,8 @@ parameters {
   real T; 
   real T_es[ns]; 
   real T_ei[ni]; 
-  real T_esi[ns,ni]; 
+  //real T_esi[ns,ni]; 
+  real T_esi[nsi];
   real<lower=0> sigma_T_ei; 
   real<lower=0> sigma_T_es; 
   real<lower=0> sigma_T_esi; 
@@ -39,7 +44,8 @@ parameters {
   real R; 
   real R_es[ns]; 
   real R_ei[ni]; 
-  real R_esi[ns,ni]; 
+  //real R_esi[ns,ni]; 
+  real R_esi[nsi];
   real<lower=0> sigma_R_ei; 
   real<lower=0> sigma_R_es; 
   real<lower=0> sigma_R_esi; 
@@ -57,10 +63,10 @@ transformed parameters {
   real Tau;// = T + T_es[subject[i]] + T_ei[item[i]] + T_esi[subject[i], item[i]];
 
   for(i in 1:N){ 
-    log_Alpha = A + A_es[subject[i]] + A_ei[item[i]] + A_esi[subject[i], item[i]];
-    log_Beta = B + B_es[subject[i]] + B_ei[item[i]] + B_esi[subject[i], item[i]];
-    Rate = R + R_es[subject[i]] + R_ei[item[i]] + R_esi[subject[i], item[i]];
-    Tau = T + T_es[subject[i]] + T_ei[item[i]] + T_esi[subject[i], item[i]];
+    log_Alpha = A + A_es[subject[i]] + A_ei[item[i]] + A_esi[si_lookup[subject[i], item[i]]];
+    log_Beta = B + B_es[subject[i]] + B_ei[item[i]] + B_esi[si_lookup[subject[i], item[i]]];
+    Rate = R + R_es[subject[i]] + R_ei[item[i]] + R_esi[si_lookup[subject[i], item[i]]];
+    Tau = T + T_es[subject[i]] + T_ei[item[i]] + T_esi[si_lookup[subject[i], item[i]]];
     Tau = exp(Tau*Rate);
     // print(log_Alpha[i]);
     // print(log_Beta[i]);
@@ -99,32 +105,35 @@ model {
   
   A_es ~ normal(0, sigma_A_es);
   A_ei ~ normal(0, sigma_A_ei);
-  for(i in 1:ns) {
-    for(j in 1:ni)
-      A_esi[i,j] ~ normal(0, sigma_A_esi);
-  }
+  A_esi ~ normal(0, sigma_A_esi);
+  // for(i in 1:ns) {
+  //   for(j in 1:ni)
+  //     A_esi[i,j] ~ normal(0, sigma_A_esi);
+  // }
 
   B_es ~ normal(0, sigma_B_es);
   B_ei ~ normal(0, sigma_B_ei);
-  for(i in 1:ns) {
-    for(j in 1:ni)
-      B_esi[i,j] ~ normal(0, sigma_B_esi);
-  }
+  B_esi ~ normal(0, sigma_B_esi);
+  // for(i in 1:ns) {
+  //   for(j in 1:ni)
+  //     B_esi[i,j] ~ normal(0, sigma_B_esi);
+  // }
 
   R_es ~ normal(0, sigma_R_es);
   R_ei ~ normal(0, sigma_R_ei);
-  for(i in 1:ns) {
-    for(j in 1:ni)
-      R_esi[i,j] ~ normal(0, sigma_R_esi);
-  }
+  R_esi ~ normal(0, sigma_R_esi);
+  // for(i in 1:ns) {
+  //   for(j in 1:ni)
+  //     R_esi[i,j] ~ normal(0, sigma_R_esi);
+  // }
 
   T_es ~ normal(0, sigma_T_es);
   T_ei ~ normal(0, sigma_T_ei);
-  for(i in 1:ns) {
-    for(j in 1:ni)
-      T_esi[i,j] ~ normal(0, sigma_T_esi);
-  }
-
+  T_esi ~ normal(0, sigma_T_esi);
+  // for(i in 1:ns) {
+  //   for(j in 1:ni)
+  //     T_esi[i,j] ~ normal(0, sigma_T_esi);
+  // }
 
   y ~ normal(y_hat, sigma); 
 }

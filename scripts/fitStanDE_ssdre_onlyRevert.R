@@ -3,7 +3,6 @@ library(dplyr)
 #library(forcats)
 library(ggplot2)
 library(rstan)
-knitr::opts_chunk$set(echo = F, message = F, warning = F)
 rm(list=ls())
 
 dat = read.csv('../data/proc_shif_data.csv') %>%
@@ -17,7 +16,7 @@ dat = read.csv('../data/proc_shif_data.csv') %>%
             is.alg = ifelse(strategy == 'algorithm', 1, 0),
             is.ret = ifelse(strategy == 'retrieval', 1 , 0),
             RT) %>%
-  filter(reversions == F) %>%
+  filter(reversions == T) %>%
   mutate(subject = as.numeric(as.factor(subject)),
          item = as.numeric(as.factor(item)))
 

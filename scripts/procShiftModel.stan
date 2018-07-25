@@ -2,6 +2,8 @@ data {
   int<lower=0> N; // num observations
   int<lower=0> ni; // num items
   int<lower=0> ns; // num subjects
+  int<lower=0> nsi; // num subject-item combos
+  int<lower=0> si_lookup[ns, ni]; // lookup table for sparsely coded subject-item offsets
   int<lower=0> nt; // num trials
   int<lower=0> nc; // num strategies
   real<lower=0> y[N]; // log RT 
@@ -17,7 +19,8 @@ parameters {
   real Alg_M; // overall mean for Algorithm
   real Alg_M_es[ns]; // offset per subject for Alg mu
   real Alg_M_ei[ni]; // offset per item for Alg mu
-  real Alg_M_esi[ns,ni]; // offset per item for Alg mu
+  // real Alg_M_esi[ns,ni]; // offset per item for Alg mu
+  real Alg_M_esi[nsi]; // offset per subject-item for Alg mu (spasely coded)
   real<lower=0> sigma_Alg_M_ei; // priors on Algorithm components ...
   real<lower=0> sigma_Alg_M_es; 
   real<lower=0> sigma_Alg_M_esi; 
@@ -25,7 +28,8 @@ parameters {
   real Ret_B; // overall Beta for Retrieval
   real Ret_B_es[ns]; // offset per subject for Ret beta
   real Ret_B_ei[ni]; // offset per item for Ret beta
-  real Ret_B_esi[ns,ni]; // offset per item for Ret beta
+  // real Ret_B_esi[ns,ni]; // offset per item for Ret beta
+  real Ret_B_esi[nsi]; 
   real<lower=0> sigma_Ret_B_ei; // priors on Retrieval Beta components ...
   real<lower=0> sigma_Ret_B_es; 
   real<lower=0> sigma_Ret_B_esi; 
@@ -33,7 +37,8 @@ parameters {
   real Ret_T; // overall Tau for Retrieval (rate)
   real Ret_T_es[ns]; // offset per subject for Ret Tau
   real Ret_T_ei[ni]; // offset per item for Ret Tau
-  real Ret_T_esi[ns,ni]; // offset per item for Ret Tau
+  //real Ret_T_esi[ns,ni]; // offset per item for Ret Tau
+  real Ret_T_esi[nsi]; 
   real<lower=0> sigma_Ret_T_ei; // priors on Retrieval Tau components ...
   real<lower=0> sigma_Ret_T_es; 
   real<lower=0> sigma_Ret_T_esi; 
@@ -51,9 +56,10 @@ transformed parameters {
   real Beta[N];
   real y_hat[N];
   for(i in 1:N){
-    Mu[i] = Alg_M + Alg_M_es[subject[i]]+Alg_M_ei[item[i]]+Alg_M_esi[subject[i], item[i]];
-    Beta[i] = Ret_B + Ret_B_es[subject[i]]+Ret_B_ei[item[i]]+Ret_B_esi[subject[i], item[i]];
-    Tau[i] = Ret_T + Ret_T_es[subject[i]]+Ret_T_ei[item[i]]+Ret_T_esi[subject[i], item[i]];
+    // print(si_lookup[subject[i], item[i]])
+    Mu[i] = Alg_M + Alg_M_es[subject[i]]+Alg_M_ei[item[i]]+Alg_M_esi[si_lookup[subject[i], item[i]]];
+    Beta[i] = Ret_B + Ret_B_es[subject[i]]+Ret_B_ei[item[i]]+Ret_B_esi[si_lookup[subject[i], item[i]]];
+    Tau[i] = Ret_T + Ret_T_es[subject[i]]+Ret_T_ei[item[i]]+Ret_T_esi[si_lookup[subject[i], item[i]]];
     y_hat[i] =  isAlg[i]*( Mu[i] ) + isRet[i]*( Beta[i] +exp(Tau[i])*log(17) - exp(Tau[i])*log(trial[i]));
   }
  }
@@ -79,24 +85,27 @@ model {
   
   Alg_M_es ~ normal(0, sigma_Alg_M_es);
   Alg_M_ei ~ normal(0, sigma_Alg_M_ei);
-  for(i in 1:ns) {
-    for(j in 1:ni)
-      Alg_M_esi[i,j] ~ normal(0, sigma_Alg_M_esi);
-  }
+  Alg_M_esi ~ normal(0, sigma_Alg_M_esi);
+  // for(i in 1:ns) {
+  //   for(j in 1:ni)
+  //     Alg_M_esi[i,j] ~ normal(0, sigma_Alg_M_esi);
+  // }
 
   Ret_B_es ~ normal(0, sigma_Ret_B_es);
   Ret_B_ei ~ normal(0, sigma_Ret_B_ei);
-  for(i in 1:ns) {
-    for(j in 1:ni)
-      Ret_B_esi[i,j] ~ normal(0, sigma_Ret_B_esi);
-  }
+  Ret_B_esi ~ normal(0, sigma_Ret_B_esi);
+  // for(i in 1:ns) {
+  //   for(j in 1:ni)
+  //     Ret_B_esi[i,j] ~ normal(0, sigma_Ret_B_esi);
+  // }
 
   Ret_T_es ~ normal(0, sigma_Ret_T_es);
   Ret_T_ei ~ normal(0, sigma_Ret_T_ei);
-  for(i in 1:ns) {
-    for(j in 1:ni)
-      Ret_T_esi[i,j] ~ normal(0, sigma_Ret_T_esi);
-  }
+  Ret_T_esi ~ normal(0, sigma_Ret_T_esi);
+  // for(i in 1:ns) {
+  //   for(j in 1:ni)
+  //     Ret_T_esi[i,j] ~ normal(0, sigma_Ret_T_esi);
+  // }
 
   y ~ normal(y_hat, sigma);
 }

@@ -17,12 +17,13 @@ dat = read.csv('../data/proc_shif_data.csv') %>%
             is.alg = ifelse(strategy == 'algorithm', 1, 0),
             is.ret = ifelse(strategy == 'retrieval', 1 , 0),
             RT) %>%
-  filter(reversions == F) %>%
+  filter(reversions == T) %>%
   mutate(subject = as.numeric(as.factor(subject)),
          item = as.numeric(as.factor(item)))
 
 source('./mk_sparse_sub-item_matrix.R')
 si.lookup = siMat(dat)
+
 
 stan.data = list(y = log(dat$RT), 
                  strategy = as.integer(dat$strategy == 'retrieval')+1,
@@ -52,8 +53,21 @@ options(mc.cores = parallel::detectCores())
 # To avoid recompilation of unchanged Stan programs, we recommend calling
 rstan_options(auto_write = TRUE)
 
-# fit.ps <- stan(
-#   file = './procShiftModel.stan',
+fit.ps <- stan(
+  file = './procShiftModel.stan',
+  #model_code = mod,  # Stan program
+  data = stan.data,    # named list of data
+  chains = 4,             # number of Markov chains
+  warmup = 1000,          # number of warmup iterations per chain
+  iter = 3000,            # total number of iterations per chain
+  cores = 4,              # number of cores
+  refresh = 250,          # show progress every 'refresh' iterations
+  control = list(adapt_delta = 0.99,  max_treedepth = 15)
+)
+
+
+# fit.de <- stan(
+#   file = './delayedExp.stan',
 #   #model_code = mod,  # Stan program
 #   data = stan.data,    # named list of data
 #   chains = 4,             # number of Markov chains
@@ -62,42 +76,29 @@ rstan_options(auto_write = TRUE)
 #   cores = 4,              # number of cores
 #   refresh = 250,          # show progress every 'refresh' iterations
 #   control = list(adapt_delta = 0.99,  max_treedepth = 15)
+# 
 # )
-
-
-fit.de <- stan(
-  file = './delayedExp.stan',
-  #model_code = mod,  # Stan program
-  data = stan.data,    # named list of data
-  chains = 4,             # number of Markov chains
-  warmup = 1500,          # number of warmup iterations per chain
-  iter = 3500,            # total number of iterations per chain
-  cores = 4,              # number of cores
-  refresh = 250,          # show progress every 'refresh' iterations
-  control = list(adapt_delta = 0.9,  max_treedepth = 12)
-)
 
 #samples <- extract(fit) %>% as.data.frame()
 
 #params = get_sampler_params(fit) # apparently this is useful for something...
 
-#coefs.ps = summary(fit.ps)$summary[,1] # pull out just the mean of each coef
-coefs.de = summary(fit.de)$summary[,1] # pull out just the mean of each coef
+coefs.ps = summary(fit.ps)$summary[,1] # pull out just the mean of each coef
+#coefs.de = summary(fit.de)$summary[,1] # pull out just the mean of each coef
 
 
-pred.dat.de = dat %>%
+pred.dat.ps = dat %>%
   mutate_at(c('subject','item'), function(x) as.numeric(as.factor(x))) %>%
   mutate(strategy = as.integer(strategy == 'retrieval')+1,
          logRT = log(RT),
-         #pred.logRT.ps = NA,
-         pred.logRT.de = NA)
+         pred.logRT.ps = NA)
 
-for(row in 1:nrow(pred.dat.de)){ 
-  pred.dat.de[row, 'pred.logRT.de'] = coefs.de[paste0('y_hat[',row,']')]
-  pred.dat.de[row,'pred.RT.de'] = exp(pred.dat.de[row,'pred.logRT.de'])
+for(row in 1:nrow(pred.dat.ps)){ 
+  pred.dat.ps[row, 'pred.logRT.ps'] = coefs.ps[paste0('y_hat[',row,']')]
+  pred.dat.ps[row,'pred.RT.ps'] = exp(pred.dat.ps[row,'pred.logRT.ps'])
 }
 
-# sub.item.plot = pred.dat.de %>%
+# sub.item.plot = pred.dat %>%
 #   mutate(strategy = as.factor(strategy)) %>%
 #   ggplot(aes(x = trial, color = strategy, group=strategy))+
 #   geom_point(aes(y=logRT))+
@@ -108,12 +109,10 @@ for(row in 1:nrow(pred.dat.de)){
 
 
 # sub.item.plot %>% ggsave(filename='mostRecentSubj.plot.preds_ps&de.pdf',path='../plots/', width = 25, height = 40, device= 'pdf')
+pred.dat.ps.noRevert = pred.dat.ps
+rm(pred.dat.ps)
 
-pred.dat.de.noRevert = pred.dat.de
+save(list = c('pred.dat.ps.noRevert'), file = '../data/mostRecentPredDat_PS_noRevert.rdata')
 
-rm(pred.dat.de)
-
-save(list = c('pred.dat.de.noRevert'), file = '../data/mostRecentPredDat_DE_noRevert.rdata')
-
-save.image(paste0('../large_data/stanoutput_de_noRevert',date(),'.rdata'))
+save.image(paste0('../large_data/stanoutput_ps_noRevert',date(),'.rdata'))
 

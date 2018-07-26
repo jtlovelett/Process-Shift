@@ -109,10 +109,10 @@ for(row in 1:nrow(pred.dat.ps)){
 
 
 # sub.item.plot %>% ggsave(filename='mostRecentSubj.plot.preds_ps&de.pdf',path='../plots/', width = 25, height = 40, device= 'pdf')
-pred.dat.ps.noRevert = pred.dat.ps
+pred.dat.ps.onlyRevert = pred.dat.ps
 rm(pred.dat.ps)
 
-save(list = c('pred.dat.ps.noRevert'), file = '../data/mostRecentPredDat_PS_noRevert.rdata')
+save(list = c('pred.dat.ps.onlyRevert'), file = '../data/mostRecentPredDat_PS_onlyRevert.rdata')
 
-save.image(paste0('../large_data/stanoutput_ps_noRevert',date(),'.rdata'))
+save.image(paste0('../large_data/stanoutput_ps_onlyRevert',date(),'.rdata'))
 

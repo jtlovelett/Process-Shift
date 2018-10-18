@@ -35,6 +35,11 @@ pred.dat.onlyRevert = pred.dat.ps.onlyRevert %>%
 
 rm(pred.dat.ps, pred.dat.de, pred.dat.ps.noRevert, pred.dat.de.noRevert,
    pred.dat.ps.onlyRevert, pred.dat.de.onlyRevert)
+
+# use these later on to pull only relevant logLik out of fitted model
+trials.reversions = which(pred.dat$reversions==TRUE)
+trials.noReversions = which(pred.dat$reversions==FALSE)
+  
 ```
 
 # Plots
@@ -101,103 +106,68 @@ sub.plot.onlyRevert
 ```
 # Model Comparison
 
-## R^2
+## WAIC  
+ 
 
-```{r Model Comparison: R^2}
-# R^2_adj = 1 - { [(1-R^2)(n-1)] / (n-k-1) }
-
-# does this account for offsets too? or just overall?
-k.ps = 3 # Alg_M, Ret_B, Ret_T = 3 (plus eventual P(shift) param theta)
-k.de = 4 # alpha, beta, tau, r = 4
-
-# note: if num params includes the hierarchical nature of params, be careful of potentially poorly-behaved adj r^2 when k >> 1 
-r2.adj = function(x, y, k){
-  n = length(x)
-  if(n != length(y)){
-    stop("x and y have different lengths!")
-  }
-  r2 = cor(x,y)^2
-  1 - (1-r2) * ( (n-1)/(n-k-1) )
-}
-
-r2.results = c(ps = with(pred.dat, r2.adj(logRT,pred.logRT.ps,k.ps)),
-               de = with(pred.dat, r2.adj(logRT,pred.logRT.de,k.de)),
-               ps.noRever = with(pred.dat.noRevert, 
-                                 r2.adj(logRT, pred.logRT.ps, k.ps)),
-               de.noRever = with(pred.dat.noRevert, 
-                                 r2.adj(logRT, pred.logRT.de, k.ps)),
-               ps.onlyRever = with(pred.dat.onlyRevert,
-                                   r2.adj(logRT, pred.logRT.ps, k.ps)),
-               de.onlyRever = with(pred.dat.onlyRevert,
-                                   r2.adj(logRT, pred.logRT.de, k.ps)))
-r2.results
-```
-
-## WAIC
 ```{r}
-# http://mc-stan.org/loo/articles/loo2-example.html
-# If we had written our own Stan program instead of using rstanarm we would pass an array or matrix of log-liklihood values to the loo function (see, e.g. help("loo.array", package = "loo"))
 
 # PS log likelihood / waic
 load('../large_data/stanoutput_ps_Thu Jul_12_16-03-12_2018.rdata')
 log.lik.ps = extract_log_lik(fit.ps, parameter_name = "logLik", merge_chains = TRUE)
-waic.ps = waic(log.lik.ps)
-waic.loo.ps = loo(log.lik.ps)
-rm(fit.ps)
-
-# PS (no reversions) log likelihood / waic
-load('../large_data/stanoutput_ps_noRevertThu_Jul_26_00-19-39_2018.rdata')
-#load('../large_data/stanoutput_ps_noRevertThu Jul 12 17:39:10 2018.rdata')
-log.lik.ps.nr = extract_log_lik(fit.ps, parameter_name = "logLik", merge_chains = TRUE)
-waic.ps.nr = waic(log.lik.ps.nr)
-waic.loo.ps.nr = loo(log.lik.ps.nr)
+waic.ps = waic(log.lik.ps)$estimates['waic','Estimate']
+#waic.loo.ps = loo(log.lik.ps)
 rm(fit.ps)
 
 # PS (only reversions) log likelihood / waic
-load('../large_data/stanoutput_ps_onlyRevertWed_Jul_25_22-40-03_2018.rdata')
-log.lik.ps.or = extract_log_lik(fit.ps, parameter_name = "logLik", merge_chains = TRUE)
-waic.ps.or = waic(log.lik.ps.or)
-waic.loo.ps.or = loo(log.lik.ps.or)
-rm(fit.ps)
+waic.ps.reversions = waic(log.lik.ps[,trials.reversions])$estimates['waic','Estimate']
+#waic.loo.ps.reversions = loo(log.lik.ps.reversions)
+
+# PS (no reversions) log likelihood / waic
+waic.ps.noReversions = waic(log.lik.ps[,trials.noReversions])$estimates['waic','Estimate']
+#waic.loo.ps.noReversions = loo(log.lik.ps.noReversions)
 
 # DE log likelihood / waic
 load('../large_data/stanoutput_de_Tue_Jul_10_19-54-11_2018.rdata')
 log.lik.de = extract_log_lik(fit.de, parameter_name = "logLik", merge_chains = TRUE)
-waic.de = waic(log.lik.de)
-waic.loo.de = loo(log.lik.de)
-rm(fit.de)
-
-# DE (no reversions) log likelihood / waic
-load('../large_data/stanoutput_de_noRevertFri_Jul_27_10-07-22-2018.rdata')
-log.lik.de.nr = extract_log_lik(fit.de, parameter_name = "logLik", merge_chains = TRUE)
-waic.de.nr = waic(log.lik.de.nr)
-waic.loo.de.nr = loo(log.lik.de.nr)
+waic.de = waic(log.lik.de)$estimates['waic','Estimate']
+#waic.loo.de = loo(log.lik.de)
 rm(fit.de)
 
 # DE (only reversions) log likelihood / waic
-load('../large_data/stanoutput_de_onlyRevertThu_Jul_26_12-54-42_2018.rdata')
-log.lik.de.or = extract_log_lik(fit.de, parameter_name = "logLik", merge_chains = TRUE)
-waic.de.or = waic(log.lik.de.or)
-waic.loo.de.or = loo(log.lik.de.or)
-rm(fit.de)
+waic.de.reversions = waic(log.lik.de[,trials.reversions])$estimates['waic','Estimate']
+#waic.loo.de.reversions = loo(log.lik.de.reversions)
+
+# DE (no reversions) log likelihood / waic
+waic.de.noReversions = waic(log.lik.de[,trials.noReversions])$estimates['waic','Estimate']
+#waic.loo.de.noReversions = loo(log.lik.de.noReversions)
+
 
 waics = data_frame(
-  model = c('PS','PS_noRevert','PS_onlyRevert','DE','DE_noRevert','DE_onlyRevert'),
-  waic = c(waic.ps$estimates['waic','Estimate'],
-           waic.ps.nr$estimates['waic','Estimate'],
-           waic.ps.or$estimates['waic','Estimate'],
-           waic.de$estimates['waic','Estimate'],
-           waic.de.nr$estimates['waic','Estimate'],
-           waic.de.or$estimates['waic','Estimate']),
-  waic_loo = c(waic.loo.ps$estimates['looic','Estimate'], 
-               waic.loo.ps.nr$estimates['looic','Estimate'],
-               waic.loo.ps.or$estimates['looic','Estimate'],
-               waic.loo.de$estimates['looic','Estimate'], 
-               waic.loo.de.nr$estimates['looic','Estimate'],
-               waic.loo.de.or$estimates['looic','Estimate'])
+  model = rep(c('Process Shift','Delayed Exponential'),times = 3),
+  data = c('full','full',
+            'noReversions','noReversions',
+            'onlyReversions','onlyReversions'),
+  waic = c(waic.ps,
+           waic.de,
+           waic.ps.noReversions,
+           waic.de.noReversions,
+           waic.ps.reversions,
+           waic.de.reversions)#,
+  # waic_loo = c(waic.loo.ps$estimates['looic','Estimate'], 
+  #              waic.loo.de$estimates['looic','Estimate'], 
+  #              waic.loo.ps.noReversions$estimates['looic','Estimate'],
+  #              waic.loo.de.noReversions$estimates['looic','Estimate'],
+  #              waic.loo.ps.reversions$estimates['looic','Estimate'],
+  #              waic.loo.de.reversions$estimates['looic','Estimate'])
   )
+```
 
-knitr::kable(waics)
-
+```{r}
+ggplot(waics, aes(x = model, y = waic, fill = model))+
+  geom_bar(stat='identity', position = position_dodge())+
+  facet_grid(~data)+
+  theme_linedraw()+
+  scale_x_discrete(name = '', breaks=c(),labels=c())+
+  scale_y_continuous(expand=c(0,0))
 ```
 

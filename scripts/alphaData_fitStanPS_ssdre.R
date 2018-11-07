@@ -3,10 +3,11 @@ library(dplyr)
 #library(forcats)
 library(ggplot2)
 library(rstan)
+library(tidyverse)
 knitr::opts_chunk$set(echo = F, message = F, warning = F)
 #rm(list=ls())
 
-dat = read_csv(paste0(wd, '../data/alphaData_raw.csv')) %>%
+dat = read_csv('../data/alphaData_raw.csv') %>%
   filter(acc == 1) %>%
   select(subject = su,
          trial = bl,
@@ -21,21 +22,9 @@ dat = read_csv(paste0(wd, '../data/alphaData_raw.csv')) %>%
          is.alg = ifelse(strategy == 'algorithm', 1, 0),
          is.ret = ifelse(strategy == 'retrieval', 1 , 0),
          is.unknown = ifelse(strategy == 'unprobed', 1 , 0)) %>%
-  filter(strategy != 'forgot')
-
-# dat = read.csv('../data/proc_shif_data.csv') %>%
-#   transmute(subject = su,
-#             trial = bl,
-#             first.correct.trial.item = first,
-#             trials.since.1st.correct = bl_r,
-#             reversions = ifelse(itype == 1, F,T),
-#             item,
-#             strategy = ifelse(strat==1, 'algorithm','retrieval'),
-#             is.alg = ifelse(strategy == 'algorithm', 1, 0),
-#             is.ret = ifelse(strategy == 'retrieval', 1 , 0),
-#             RT) %>%
-#   mutate(subject = as.numeric(as.factor(subject)),
-#          item = as.numeric(as.factor(item)))
+  filter(strategy != 'forgot') %>%
+  mutate(subject = as.numeric(as.factor(subject)),
+         item = as.numeric(as.factor(item)))
 
 source('./mk_sparse_sub-item_matrix.R')
 si.lookup = siMat(dat)
@@ -56,12 +45,13 @@ stan.data = list(y = log(dat$RT),
                  nt = length(unique(dat$trial)),
                  # Find a reasonable location for beta:
                  # 85th %ile of subject*item first correct retrieval trial (ok?)
-                 betaBase = dat %>% 
-                   group_by(subject, item) %>%
-                   summarize(first.correct = mean(first.correct.trial.item)) %>%
-                   ungroup() %>%
-                   summarize(beta.loc = quantile(first.correct,.85)) %>%
-                   .$beta.loc,
+                 # betaBase = dat %>% 
+                 #   group_by(subject, item) %>%
+                 #   summarize(first.correct = mean(first.correct.trial.item)) %>%
+                 #   ungroup() %>%
+                 #   summarize(beta.loc = quantile(first.correct,.85)) %>%
+                 #   .$beta.loc,
+                 betaBase = 17, # I think that's the result of the above...
                  si_lookup = si.lookup
 )
 # For execution on a local, multicore CPU with excess RAM we recommend calling
@@ -73,9 +63,9 @@ fit.ps <- stan(
   file = './procShiftModel.stan',
   #model_code = mod,  # Stan program
   data = stan.data,    # named list of data
-  chains = 4,             # number of Markov chains
-  warmup = 1000,          # number of warmup iterations per chain
-  iter = 3000,            # total number of iterations per chain
+  chains = 1,             # number of Markov chains
+  warmup = 500,          # number of warmup iterations per chain
+  iter = 2000,            # total number of iterations per chain
   cores = 4,              # number of cores
   refresh = 250,          # show progress every 'refresh' iterations
   control = list(adapt_delta = 0.99,  max_treedepth = 15)

@@ -20,7 +20,6 @@ parameters {
   real Alg_M; // overall mean for Algorithm
   real Alg_M_es[ns]; // offset per subject for Alg mu
   real Alg_M_ei[ni]; // offset per item for Alg mu
-  // real Alg_M_esi[ns,ni]; // offset per item for Alg mu
   real Alg_M_esi[nsi]; // offset per subject-item for Alg mu (spasely coded)
   real<lower=0> sigma_Alg_M_ei; // priors on Algorithm components ...
   real<lower=0> sigma_Alg_M_es; 
@@ -29,7 +28,6 @@ parameters {
   real Ret_B; // overall Beta for Retrieval
   real Ret_B_es[ns]; // offset per subject for Ret beta
   real Ret_B_ei[ni]; // offset per item for Ret beta
-  // real Ret_B_esi[ns,ni]; // offset per item for Ret beta
   real Ret_B_esi[nsi]; 
   real<lower=0> sigma_Ret_B_ei; // priors on Retrieval Beta components ...
   real<lower=0> sigma_Ret_B_es; 
@@ -38,7 +36,6 @@ parameters {
   real Ret_T; // overall Tau for Retrieval (rate)
   real Ret_T_es[ns]; // offset per subject for Ret Tau
   real Ret_T_ei[ni]; // offset per item for Ret Tau
-  //real Ret_T_esi[ns,ni]; // offset per item for Ret Tau
   real Ret_T_esi[nsi]; 
   real<lower=0> sigma_Ret_T_ei; // priors on Retrieval Tau components ...
   real<lower=0> sigma_Ret_T_es; 
@@ -51,45 +48,62 @@ parameters {
   real<lower=0> sigma; // expand this to something similar to the above (variable sigma)
 
 
-  real p_Ret; // overall probability of using retrieval strat
-  real logOdds_Ret_ei; // item offset
-  real logOdds_Ret_es; // subject offset
-  real logOdds_Ret_esi; // subject-item offset
+  real p_Ret_alpha; // parameter 1 of logisitc function predicting p
+  real p_Ret_alpha_ei;
+  real p_Ret_alpha_es;
+  real p_Ret_alpha_esi;
+  real<lower=0> sigma_p_Ret_alpha_ei;
+  real<lower=0> sigma_p_Ret_alpha_es;
+  real<lower=0> sigma_p_Ret_alpha_esi;
+
+  real p_Ret_gamma; // parameter 2 of logisitc function predicting p
+  real p_Ret_gamma_ei;
+  real p_Ret_gamma_es;
+  real p_Ret_gamma_esi;
+  real<lower=0> sigma_p_Ret_gamma_ei;
+  real<lower=0> sigma_p_Ret_gamma_es;
+  real<lower=0> sigma_p_Ret_gamma_esi;
 }
 
 transformed parameters {  
   real Mu[N];
   real Tau[N];
   real Beta[N];
-  real y_hat[N];
-  real logOdds_Ret[N];
+  real y_hat_Alg[N];
+  real y_hat_Ret[N];
   for(i in 1:N){
-    // print(si_lookup[subject[i], item[i]])
     Mu[i] = Alg_M + Alg_M_es[subject[i]]+Alg_M_ei[item[i]]+Alg_M_esi[si_lookup[subject[i], item[i]]];
     Beta[i] = Ret_B + Ret_B_es[subject[i]]+Ret_B_ei[item[i]]+Ret_B_esi[si_lookup[subject[i], item[i]]];
     Tau[i] = Ret_T + Ret_T_es[subject[i]]+Ret_T_ei[item[i]]+Ret_T_esi[si_lookup[subject[i], item[i]]];
-    logOdds_Ret[i] = log(p_Ret/(1-p_Ret)) + logOdds_Ret_es[i] + logOdds_Ret_ei[i] + logOdds_Ret_esi[si_lookup[subject[i], item[i]]];
-    if (isUnpr) 
-      if (logOdds_Ret[i] > 0)
-        isRet = 1; isAlg = 0;
-      else 
-        isRet = 0; isAlg = 1;
-    y_hat[i] =  isAlg[i]*(Mu[i]) + isRet[i]*( Beta[i] + exp(Tau[i])*log(17) - exp(Tau[i])*log(trial[i]));
+
+    Alpha[i] = p_Ret_alpha + p_Ret_alpha_es[subject[i]] + p_Ret_alpha_ei[subject[i]] + p_Ret_alpha_esi[si_lookup[subject[i], item[i]]]
+    Gamma[i] = p_Ret_gamma + p_Ret_gamma_es[subject[i]] + p_Ret_gamma_ei[subject[i]] + p_Ret_gamma_esi[si_lookup[subject[i], item[i]]]
+
+    p_Ret[i] = 1 / (1 + exp(-(Alpha[i]+Gamma[i]*log(trial[i]))));
+
+    y_hat_Alg[i] = Mu[i];
+    y_hat_Ret[i] = Beta[i] + exp(Tau[i])*log(17) - exp(Tau[i])*log(trial[i]);
   }
  }
 
 model {
+
+  // Top-level priors
   sigma ~ exponential(0.01);
 
   Alg_M ~ normal(7.6, 0.9); // set as overall mean and sd of data
   Ret_B ~ normal(7.3, 1); // set as mean, sd for retrieval trials
   Ret_T ~ normal(-1, 2); // no idea if this is reasonable ... 
-  p_Ret ~ uniform(0,1) // is this totally useless?
+  p_Ret_alpha ~ normal(0,2) // 
+  p_Ret_gamma ~ normal(0,2) // 
+
+  // Algorithm strategy priors on component variances
 
   sigma_Alg_M_es ~ exponential(0.01);
   sigma_Alg_M_ei ~ exponential(0.01);
   sigma_Alg_M_esi ~ exponential(0.01);
 
+  // Retrieval strategy priors on component variances
   sigma_Ret_B_es ~ exponential(0.01);
   sigma_Ret_B_ei ~ exponential(0.01);
   sigma_Ret_B_esi ~ exponential(0.01);
@@ -98,44 +112,70 @@ model {
   sigma_Ret_T_ei ~ exponential(0.01);
   sigma_Ret_T_esi ~ exponential(0.01);
 
-  sigma_logOdds_Ret_es ~ exponential(0.01);
-  sigma_logOdds_Ret_es ~ exponential(0.01);
-  sigma_logOdds_Ret_es ~ exponential(0.01);
+  // P(retrieval strategy chosen -- priors for variances of logisitc function params)
+
+  sigma_p_Ret_alpha_es ~ exponential(0.01);
+  sigma_p_Ret_alpha_ei ~ exponential(0.01);
+  sigma_p_Ret_alpha_esi ~ exponential(0.01);
+
+  sigma_p_Ret_gamma_es ~ exponential(0.01);
+  sigma_p_Ret_gamma_ei ~ exponential(0.01);
+  sigma_p_Ret_gamma_esi ~ exponential(0.01);
+
+  // Algorithm strategy parameters
   
   Alg_M_es ~ normal(0, sigma_Alg_M_es);
   Alg_M_ei ~ normal(0, sigma_Alg_M_ei);
   Alg_M_esi ~ normal(0, sigma_Alg_M_esi);
-  // for(i in 1:ns) {
-  //   for(j in 1:ni)
-  //     Alg_M_esi[i,j] ~ normal(0, sigma_Alg_M_esi);
-  // }
+
+  // Algorithm strategy parameters
 
   Ret_B_es ~ normal(0, sigma_Ret_B_es);
   Ret_B_ei ~ normal(0, sigma_Ret_B_ei);
   Ret_B_esi ~ normal(0, sigma_Ret_B_esi);
-  // for(i in 1:ns) {
-  //   for(j in 1:ni)
-  //     Ret_B_esi[i,j] ~ normal(0, sigma_Ret_B_esi);
-  // }
 
   Ret_T_es ~ normal(0, sigma_Ret_T_es);
   Ret_T_ei ~ normal(0, sigma_Ret_T_ei);
   Ret_T_esi ~ normal(0, sigma_Ret_T_esi);
-  // for(i in 1:ns) {
-  //   for(j in 1:ni)
-  //     Ret_T_esi[i,j] ~ normal(0, sigma_Ret_T_esi);
-  // }
 
-  logOdds_Ret_es ~ normal(0, sigma_logOdds_Ret_es);
-  logOdds_Ret_ei ~ normal(0, sigma_logOdds_Ret_ei);
-  logOdds_Ret_esi ~ normal(0, sigma_logOdds_Ret_esi);
+  // P(strat == retrieval)
 
-  y ~ normal(y_hat, sigma);
+  p_Ret_alpha_es ~ normal(0, sigma_p_Ret_alpha_es);
+  p_Ret_alpha_ei ~ normal(0, sigma_p_Ret_alpha_ei);
+  p_Ret_alpha_esi ~ normal(0, sigma_p_Ret_alpha_esi);
+
+  p_Ret_gamma_es ~ normal(0, sigma_p_Ret_gamma_es);
+  p_Ret_gamma_ei ~ normal(0, sigma_p_Ret_gamma_ei);
+  p_Ret_gamma_esi ~ normal(0, sigma_p_Ret_gamma_esi);
+
+  for (n in 1:N){
+    if(isRet[n]){
+      target += normal_lpdf(y[n] | y_hat_Ret[n], sigma )
+      target += log(p_Ret[n])
+    } else if (isAlg[n]){
+        target += normal_lpdf(y[n] | y_hat_Alg[n], sigma)
+        target += log(1-p_Ret[n])
+    } else {
+        target += log_mix(p_Ret[n],
+                          normal_lpdf(y[n] | y_hat_Ret[n], sigma ),
+                          normal_lpdf(y[n] | y_hat_Alg[n], sigma))
+    }
+  }
 }
+
 
 generated quantities {
   vector[N] logLik; 
   for(n in 1:N){
     logLik[n] = normal_lpdf(y[n] | y_hat[n], sigma);
+    if(isRet[n]){
+      logLik[n] = normal_lpdf(y[n] | y_hat_Ret[n], sigma ) + log(p_Ret[n])
+    } else if (isAlg[n]){
+        logLik[n] = normal_lpdf(y[n] | y_hat_Alg[n], sigma) + log(1-p_Ret[n])
+    } else {
+        logLik[n] = log_mix(p_Ret[n],
+                          normal_lpdf(y[n] | y_hat_Ret[n], sigma ),
+                          normal_lpdf(y[n] | y_hat_Alg[n], sigma))
+    }
   }
 }

@@ -82,7 +82,7 @@ transformed parameters {
 model {
   sigma ~ exponential(.1);
 
-  A ~ normal(0, 5); // set as overall mean and sd of data
+  A ~ normal(0, 6); // set as overall mean and sd of data
   B ~ normal(8, 5); // set as mean, sd for retrieval trials
   T ~ normal(3, 2); // was centered on 0
   R ~ normal(-1, 2);

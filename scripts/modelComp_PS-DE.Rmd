@@ -14,6 +14,11 @@ library(lubridate)
 library(rstan)
 library(loo)
 rm(list=ls())
+
+ps.orig = '../large_data/stanoutput_ps_Mon Nov 12 17:06:08 2018.rdata'
+ps.alpha = '../large_data/stanoutput_ps_Tue Nov 13 06:22:20 2018.rdata'
+de.orig = '../large_data/stanoutput_de_Mon Nov 12 21:47:55 2018.rdata'
+de.alpha = '../large_data/stanoutput_de_Mon Nov 12 21:47:55 2018.rdata'
 ```
 
 ```{r load data & pre-process}
@@ -21,17 +26,17 @@ load('../data/mostRecentPredDat_PS.rdata')
 load('../data/mostRecentPredDat_DE.rdata')
 
 pred.dat = pred.dat.ps %>% 
-  left_join(pred.dat.de)
+  left_join(pred.dat.de, by = c('subject','item','trial'))
 
 load('../data/mostRecentPredDat_PS_noRevert.rdata')
 load('../data/mostRecentPredDat_DE_noRevert.rdata')
 pred.dat.noRevert = pred.dat.ps.noRevert %>% 
-  left_join(pred.dat.de.noRevert)
+  left_join(pred.dat.de.noRevert, by = c('subject','item','trial'))
 
 load('../data/mostRecentPredDat_PS_onlyRevert.rdata')
 load('../data/mostRecentPredDat_DE_onlyRevert.rdata')
 pred.dat.onlyRevert = pred.dat.ps.onlyRevert %>% 
-  left_join(pred.dat.de.onlyRevert)
+  left_join(pred.dat.de.onlyRevert, by = c('subject','item','trial'))
 
 rm(pred.dat.ps, pred.dat.de, pred.dat.ps.noRevert, pred.dat.de.noRevert,
    pred.dat.ps.onlyRevert, pred.dat.de.onlyRevert)
@@ -46,7 +51,7 @@ trials.noReversions = which(pred.dat$reversions==FALSE)
 
 ## Including Reversion Trials
 
-```{r make plots if reversions, fig.height=40, fig.width=25 }
+```{r make plots if reversions, fig.height=40, fig.width=25, eval=F }
 # NOTE: overwrites current version
 sub.plot = pred.dat %>%
          mutate(strategy = as.factor(strategy),
@@ -66,7 +71,7 @@ sub.plot
 
 ## Excluding Reversion Trials
 
-```{r make plots if no reversions, fig.height=40, fig.width=25 }
+```{r make plots if no reversions, fig.height=40, fig.width=25, eval=F }
 # NOTE: overwrites current version
 sub.plot.noRevert = pred.dat.noRevert %>%
          mutate(strategy = as.factor(strategy),
@@ -87,7 +92,7 @@ sub.plot.noRevert
 
 ## Only Reversion Trials
 
-```{r make plots if only reversions, fig.height=40, fig.width=25 }
+```{r make plots if only reversions, fig.height=40, fig.width=25,eval=F }
 # NOTE: overwrites current version
 sub.plot.onlyRevert = pred.dat.onlyRevert %>%
          mutate(strategy = as.factor(strategy),
@@ -110,49 +115,114 @@ sub.plot.onlyRevert
  
 
 ```{r}
-
 # PS log likelihood / waic
-load('../large_data/stanoutput_ps_Thu Jul_12_16-03-12_2018.rdata')
+load(ps.orig)
 log.lik.ps = extract_log_lik(fit.ps, parameter_name = "logLik", merge_chains = TRUE)
-waic.ps = waic(log.lik.ps)$estimates['waic','Estimate']
+waic.ps.full = waic(log.lik.ps)
+waic.ps = waic.ps.full$estimates['waic','Estimate']
 #waic.loo.ps = loo(log.lik.ps)
 rm(fit.ps)
 
 # PS (only reversions) log likelihood / waic
-waic.ps.reversions = waic(log.lik.ps[,trials.reversions])$estimates['waic','Estimate']
+waic.ps.reversions.full = waic(log.lik.ps[,trials.reversions])
+waic.ps.reversions = waic.ps.reversions.full$estimates['waic','Estimate']
 #waic.loo.ps.reversions = loo(log.lik.ps.reversions)
 
 # PS (no reversions) log likelihood / waic
-waic.ps.noReversions = waic(log.lik.ps[,trials.noReversions])$estimates['waic','Estimate']
+waic.ps.noReversions.full = waic(log.lik.ps[,trials.noReversions])
+waic.ps.noReversions = waic.ps.noReversions.full$estimates['waic','Estimate']
 #waic.loo.ps.noReversions = loo(log.lik.ps.noReversions)
+```
+```{r}
+# PS - ALPHABET TASK DATA
+load(ps.alpha)
+log.lik.ps.alpha = extract_log_lik(fit.ps, parameter_name = "logLik", merge_chains = TRUE)
+waic.ps.full.alpha = waic(log.lik.ps.alpha)
+waic.ps.alpha = waic.ps.full.alpha$estimates['waic','Estimate']
+#waic.loo.ps = loo(log.lik.ps)
+rm(fit.ps)
 
+# PS (only reversions) log likelihood / waic
+waic.ps.reversions.full.alpha = waic(log.lik.ps.alpha[,trials.reversions])
+waic.ps.reversions.alpha = waic.ps.reversions.full.alpha$estimates['waic','Estimate']
+#waic.loo.ps.reversions = loo(log.lik.ps.reversions)
+
+# PS (no reversions) log likelihood / waic
+waic.ps.noReversions.full.alpha = waic(log.lik.ps.alpha[,trials.noReversions])
+waic.ps.noReversions.alpha = waic.ps.noReversions.full.alpha$estimates['waic','Estimate']
+#waic.loo.ps.noReversions = loo(log.lik.ps.noReversions)
+```
+```{r}
 # DE log likelihood / waic
-load('../large_data/stanoutput_de_Tue_Jul_10_19-54-11_2018.rdata')
+load(de.orig)
 log.lik.de = extract_log_lik(fit.de, parameter_name = "logLik", merge_chains = TRUE)
-waic.de = waic(log.lik.de)$estimates['waic','Estimate']
+waic.de.full = waic(log.lik.de)
+waic.de = waic.de.full$estimates['waic','Estimate']
 #waic.loo.de = loo(log.lik.de)
 rm(fit.de)
 
 # DE (only reversions) log likelihood / waic
-waic.de.reversions = waic(log.lik.de[,trials.reversions])$estimates['waic','Estimate']
+waic.de.reversions.full = waic(log.lik.de[,trials.reversions])
+waic.de.reversions = waic.de.reversions.full$estimates['waic','Estimate']
 #waic.loo.de.reversions = loo(log.lik.de.reversions)
 
 # DE (no reversions) log likelihood / waic
-waic.de.noReversions = waic(log.lik.de[,trials.noReversions])$estimates['waic','Estimate']
+waic.de.noReversions.full = waic(log.lik.de[,trials.noReversions])
+waic.de.noReversions = waic.de.noReversions.full$estimates['waic','Estimate']
 #waic.loo.de.noReversions = loo(log.lik.de.noReversions)
+```
+```{r}
+# DE Alphabet data
 
+# DE log likelihood / waic
+load(de.alpha)
+log.lik.de.alpha = extract_log_lik(fit.de, parameter_name = "logLik", merge_chains = TRUE)
+waic.de.full.alpha = waic(log.lik.de.alpha)
+waic.de.alpha = waic.de.full.alpha$estimates['waic','Estimate']
+#waic.loo.de = loo(log.lik.de)
+rm(fit.de)
 
+# DE (only reversions) log likelihood / waic
+waic.de.reversions.full.alpha = waic(log.lik.de.alpha[,trials.reversions])
+waic.de.reversions.alpha = waic.de.reversions.full.alpha$estimates['waic','Estimate']
+#waic.loo.de.reversions = loo(log.lik.de.reversions)
+
+# DE (no reversions) log likelihood / waic
+waic.de.noReversions.full.alpha = waic(log.lik.de.alpha[,trials.noReversions])
+waic.de.noReversions.alpha = waic.de.noReversions.full.alpha$estimates['waic','Estimate']
+#waic.loo.de.noReversions = loo(log.lik.de.noReversions)
+```
+```{r}
 waics = data_frame(
-  model = rep(c('Process Shift','Delayed Exponential'),times = 3),
-  data = c('full','full',
+  model = rep(c('Process Shift','Delayed Exponential'),times = 6),
+  dataSource = c(rep('orig',6),rep('alpha',6)),
+  subset = rep(c('full','full',
             'noReversions','noReversions',
-            'onlyReversions','onlyReversions'),
+            'onlyReversions','onlyReversions'),2),
   waic = c(waic.ps,
            waic.de,
            waic.ps.noReversions,
            waic.de.noReversions,
            waic.ps.reversions,
-           waic.de.reversions)#,
+           waic.de.reversions,
+           waic.ps.alpha,
+           waic.de.alpha,
+           waic.ps.noReversions.alpha,
+           waic.de.noReversions.alpha,
+           waic.ps.reversions.alpha,
+           waic.de.reversions.alpha),
+  se = c(waic.ps.full$estimates['waic','SE'],
+           waic.de.full$estimates['waic','SE'],
+           waic.ps.noReversions.full$estimates['waic','SE'],
+           waic.de.noReversions.full$estimates['waic','SE'],
+           waic.ps.reversions.full$estimates['waic','SE'],
+           waic.de.reversions.full$estimates['waic','SE'],
+           waic.ps.full.alpha$estimates['waic','SE'],
+           waic.de.full.alpha$estimates['waic','SE'],
+           waic.ps.noReversions.full.alpha$estimates['waic','SE'],
+           waic.de.noReversions.full.alpha$estimates['waic','SE'],
+           waic.ps.reversions.full.alpha$estimates['waic','SE'],
+           waic.de.reversions.full.alpha$estimates['waic','SE'])
   # waic_loo = c(waic.loo.ps$estimates['looic','Estimate'], 
   #              waic.loo.de$estimates['looic','Estimate'], 
   #              waic.loo.ps.noReversions$estimates['looic','Estimate'],
@@ -163,9 +233,24 @@ waics = data_frame(
 ```
 
 ```{r}
+waic.ses <- waics %>%
+  group_by(dataSource, subset) %>%
+  summarize(waic.diff = diff(waic),
+            se.diff = sqrt(sum(se^2)),
+            z = waic.diff / se.diff)
+
+waics %>%
+  left_join(waic.ses) %>%
+  mutate_if(is.numeric, function(x) round(x,2)) %>%
+  write_csv('../data/waic_out.csv', col_names = T) %>%
+  knitr::kable()
+
+```
+
+```{r}
 ggplot(waics, aes(x = model, y = waic, fill = model))+
   geom_bar(stat='identity', position = position_dodge())+
-  facet_grid(~data)+
+  facet_grid(subset~dataSource)+
   theme_linedraw()+
   scale_x_discrete(name = '', breaks=c(),labels=c())+
   scale_y_continuous(expand=c(0,0))

@@ -62,7 +62,6 @@ rstan_options(auto_write = TRUE)
 
 fit.ps <- stan(
   file = './alpha_procShiftModel.stan',
-  #model_code = mod,  # Stan program
   data = stan.data,    # named list of data
   chains = 4,             # number of Markov chains
   warmup = 1000,          # number of warmup iterations per chain

@@ -1,13 +1,13 @@
 model,dataSource,subset,waic,se,waic.diff,se.diff,z
-Process Shift,orig,full,4960.89,257.49,-270.24,461.17,-0.59
-Delayed Exponential,orig,full,4690.65,382.6,-270.24,461.17,-0.59
-Process Shift,orig,noReversions,1083.95,126.92,953.89,333.89,2.86
-Delayed Exponential,orig,noReversions,2037.84,308.82,953.89,333.89,2.86
-Process Shift,orig,onlyReversions,650.69,98.58,364.95,178.76,2.04
-Delayed Exponential,orig,onlyReversions,1015.64,149.12,364.95,178.76,2.04
-Process Shift,alpha,full,4090.79,325.68,599.87,502.44,1.19
-Delayed Exponential,alpha,full,4690.65,382.6,599.87,502.44,1.19
-Process Shift,alpha,noReversions,1865.1,234.42,172.74,387.71,0.45
-Delayed Exponential,alpha,noReversions,2037.84,308.82,172.74,387.71,0.45
-Process Shift,alpha,onlyReversions,708.57,81.5,307.07,169.94,1.81
-Delayed Exponential,alpha,onlyReversions,1015.64,149.12,307.07,169.94,1.81
+Process Shift,orig,full,4960.89,257.49,7471.18,303.72,24.6
+Delayed Exponential,orig,full,12432.07,161.09,7471.18,303.72,24.6
+Process Shift,orig,noReversions,1083.95,126.92,1845.66,147.13,12.54
+Delayed Exponential,orig,noReversions,2929.61,74.42,1845.66,147.13,12.54
+Process Shift,orig,onlyReversions,650.69,98.58,1102.91,116.17,9.49
+Delayed Exponential,orig,onlyReversions,1753.6,61.46,1102.91,116.17,9.49
+Process Shift,alpha,full,4087.32,325.23,1089.95,517.46,2.11
+Delayed Exponential,alpha,full,5177.27,402.47,1089.95,517.46,2.11
+Process Shift,alpha,noReversions,1863.68,233.95,252,399.7,0.63
+Delayed Exponential,alpha,noReversions,2115.69,324.07,252,399.7,0.63
+Process Shift,alpha,onlyReversions,707.17,81.32,339.96,159.48,2.13
+Delayed Exponential,alpha,onlyReversions,1047.13,137.19,339.96,159.48,2.13

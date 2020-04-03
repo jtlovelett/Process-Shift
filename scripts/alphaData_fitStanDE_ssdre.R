@@ -61,7 +61,7 @@ rstan_options(auto_write = TRUE)
 
 
 fit.de <- stan(
-  file = './delayedExp.stan', # can use same model with this data -- no need for "alpha_"
+  file = './alpha_delayedExp.stan', # can use same model with this data -- no need for "alpha_"
   #model_code = mod,  # Stan program
   data = stan.data,    # named list of data
   chains = 4,             # number of Markov chains

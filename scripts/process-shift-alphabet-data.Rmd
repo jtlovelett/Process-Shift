@@ -1,0 +1,19 @@
+---
+title: "Process-Shift Alphabet Data"
+output: html_notebook
+---
+
+```{r}
+simDelExp <- function(Alpha, Beta, log_Tau, log_Rate){
+  trial = 1:50
+  y_hat = log(Alpha + Beta * (exp(log_Tau) + 1)/(exp(log_Tau) + exp(exp(log_Rate)*trial)))
+  tibble(trial, y_hat) %>%
+    ggplot(aes(x = trial, y = y_hat)) +
+    geom_line()
+}
+```
+
+```{r}
+simDelExp(5, 100, 5, .005)
+```
+

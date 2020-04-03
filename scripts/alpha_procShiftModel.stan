@@ -75,12 +75,12 @@ transformed parameters {
   real y_hat_Alg[N];
   real y_hat_Ret[N];
   for(i in 1:N){
-    Mu[i] = Alg_M + Alg_M_es[subject[i]]+Alg_M_ei[item[i]]+Alg_M_esi[si_lookup[subject[i], item[i]]];
-    Beta[i] = Ret_B + Ret_B_es[subject[i]]+Ret_B_ei[item[i]]+Ret_B_esi[si_lookup[subject[i], item[i]]];
-    Tau[i] = Ret_T + Ret_T_es[subject[i]]+Ret_T_ei[item[i]]+Ret_T_esi[si_lookup[subject[i], item[i]]];
+    Mu[i] = Alg_M; //+ Alg_M_es[subject[i]]+Alg_M_ei[item[i]]+Alg_M_esi[si_lookup[subject[i], item[i]]];
+    Beta[i] = Ret_B; //+ Ret_B_es[subject[i]]+Ret_B_ei[item[i]]+Ret_B_esi[si_lookup[subject[i], item[i]]];
+    Tau[i] = Ret_T; //+ Ret_T_es[subject[i]]+Ret_T_ei[item[i]]+Ret_T_esi[si_lookup[subject[i], item[i]]];
 
-    Alpha[i] = p_Ret_alpha + p_Ret_alpha_es[subject[i]] + p_Ret_alpha_ei[item[i]] + p_Ret_alpha_esi[si_lookup[subject[i], item[i]]];
-    Gamma[i] = p_Ret_gamma + p_Ret_gamma_es[subject[i]] + p_Ret_gamma_ei[item[i]] + p_Ret_gamma_esi[si_lookup[subject[i], item[i]]];
+    Alpha[i] = p_Ret_alpha; //+ p_Ret_alpha_es[subject[i]] + p_Ret_alpha_ei[item[i]] + p_Ret_alpha_esi[si_lookup[subject[i], item[i]]];
+    Gamma[i] = p_Ret_gamma; //+ p_Ret_gamma_es[subject[i]] + p_Ret_gamma_ei[item[i]] + p_Ret_gamma_esi[si_lookup[subject[i], item[i]]];
 
     p_Ret[i] = 1 / (1 + exp(-(Alpha[i]+Gamma[i]*log(trial[i]))));
 
@@ -160,11 +160,12 @@ model {
         target += log(1-p_Ret[n]);
     } else {
         target += log_mix(p_Ret[n],
-                          normal_lpdf(y[n] | y_hat_Ret[n], sigma ),
-                          normal_lpdf(y[n] | y_hat_Alg[n], sigma));
+                          normal_lpdf(y[n] | y_hat_Ret[n], sigma ) , // do I need to add in the prior log(p_Ret[n]) ...
+                          normal_lpdf(y[n] | y_hat_Alg[n], sigma)); // ... and log(1-p_Ret[n]) here?
     }
   }
 }
+// generate some data that conforms to the model and then see if we can recover the parameters 
 
 
 generated quantities {

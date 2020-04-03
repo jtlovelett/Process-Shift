@@ -95,27 +95,37 @@ coefs.ps = summary(fit.ps)$summary[,1] # pull out just the mean of each coef
 
 pred.dat.ps = dat %>%
   mutate_at(c('subject','item'), function(x) as.numeric(as.factor(x))) %>%
-  mutate(strategy = as.integer(strategy == 'retrieval')+1,
+  mutate(#strategy = as.integer(strategy == 'retrieval')+1,
          logRT = log(RT),
          pred.logRT.ps = NA)
 
 for(row in 1:nrow(pred.dat.ps)){ 
-  pred.dat.ps[row, 'pred.logRT.ps'] = coefs.ps[paste0('y_hat[',row,']')]
+  pred.dat.ps[row, 'p_retrieval'] = coefs.ps[paste0('p_Ret[',row,']')]
+  if(pred.dat.ps[row, 'is.unknown'] == 1){
+    pred.dat.ps[row, 'pred.logRT.ps'] = ifelse(pred.dat.ps[row, 'p_retrieval'] > .5,
+                                               coefs.ps[paste0('y_hat_Ret[',row,']')],
+                                               coefs.ps[paste0('y_hat_Alg[',row,']')])
+  } else if(pred.dat.ps[row, 'is.ret'] == 1){
+    pred.dat.ps[row, 'pred.logRT.ps'] = coefs.ps[paste0('y_hat_Ret[',row,']')]
+  } else if(pred.dat.ps[row, 'is.alg'] == 1){
+    pred.dat.ps[row, 'pred.logRT.ps'] = coefs.ps[paste0('y_hat_Alg[',row,']')]
+  } else{ # well, shit
+    pred.dat.ps[row, 'pred.logRT.ps'] = NA
+  }
   pred.dat.ps[row,'pred.RT.ps'] = exp(pred.dat.ps[row,'pred.logRT.ps'])
 }
 
-# sub.item.plot = pred.dat %>%
-#   mutate(strategy = as.factor(strategy)) %>%
-#   ggplot(aes(x = trial, color = strategy, group=strategy))+
-#   geom_point(aes(y=logRT))+
-#   geom_line(aes(y=pred.logRT.delExp), color = 'green')+
-#   geom_line(aes(y=pred.logRT.ps), color = 'blue')+
-#   #geom_vline(aes(xintercept=first.correct.trial.item))+
-#   facet_grid(subject~item)
+sub.item.plot = pred.dat.ps %>%
+  mutate(strategy = as.factor(strategy)) %>%
+  ggplot(aes(x = trial, color = strategy, group = NULL))+
+  geom_point(aes(y=logRT))+
+  #geom_line(aes(y=pred.logRT.delExp), color = 'green')+
+  geom_line(aes(y=pred.logRT.ps), color = 'blue')+
+  #geom_vline(aes(xintercept=first.correct.trial.item))+
+  facet_grid(subject~item)
 
-
-# sub.item.plot %>% ggsave(filename='mostRecentSubj.plot.preds_ps&de.pdf',path='../plots/', width = 25, height = 40, device= 'pdf')
 
 save.image(paste0('../large_data/stanoutput_ps_alpha_',date(),'.rdata'))
 
-save(list = c('pred.dat.ps'), file = '../data/mostRecentPredDat_PS_alpha.rdata')
+pred.dat.ps.alpha = pred.dat.ps
+save(list = c('pred.dat.ps.alpha'), file = '../data/mostRecentPredDat_PS_alpha.rdata')

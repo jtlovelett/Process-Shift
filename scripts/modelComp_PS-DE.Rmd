@@ -15,10 +15,6 @@ library(rstan)
 library(loo)
 rm(list=ls())
 
-ps.orig = '../large_data/stanoutput_ps_Mon Nov 12 17:06:08 2018.rdata'
-ps.alpha = '../large_data/stanoutput_ps_Tue Nov 13 06:22:20 2018.rdata'
-de.orig = '../large_data/stanoutput_de_Mon Nov 12 21:47:55 2018.rdata'
-de.alpha = '../large_data/stanoutput_de_Mon Nov 12 21:47:55 2018.rdata'
 ```
 
 ```{r load data & pre-process}
@@ -26,17 +22,23 @@ load('../data/mostRecentPredDat_PS.rdata')
 load('../data/mostRecentPredDat_DE.rdata')
 
 pred.dat = pred.dat.ps %>% 
-  left_join(pred.dat.de, by = c('subject','item','trial'))
+  left_join(pred.dat.de %>% 
+              select(subject, item, trial, pred.RT.de, pred.logRT.de),
+            by = c('subject','item','trial'))
 
 load('../data/mostRecentPredDat_PS_noRevert.rdata')
 load('../data/mostRecentPredDat_DE_noRevert.rdata')
 pred.dat.noRevert = pred.dat.ps.noRevert %>% 
-  left_join(pred.dat.de.noRevert, by = c('subject','item','trial'))
+  left_join(pred.dat.de.noRevert%>% 
+              select(subject, item, trial, pred.RT.de, pred.logRT.de),
+            by = c('subject','item','trial'))
 
 load('../data/mostRecentPredDat_PS_onlyRevert.rdata')
 load('../data/mostRecentPredDat_DE_onlyRevert.rdata')
 pred.dat.onlyRevert = pred.dat.ps.onlyRevert %>% 
-  left_join(pred.dat.de.onlyRevert, by = c('subject','item','trial'))
+  left_join(pred.dat.de.onlyRevert %>% 
+              select(subject, item, trial, pred.RT.de, pred.logRT.de),
+            by = c('subject','item','trial'))
 
 rm(pred.dat.ps, pred.dat.de, pred.dat.ps.noRevert, pred.dat.de.noRevert,
    pred.dat.ps.onlyRevert, pred.dat.de.onlyRevert)
@@ -53,18 +55,20 @@ trials.noReversions = which(pred.dat$reversions==FALSE)
 
 ```{r make plots if reversions, fig.height=40, fig.width=25, eval=F }
 # NOTE: overwrites current version
+load('../data/mostRecentPredDat_PS_alpha_simple.rdata')
+pred.dat = pred.dat.ps # kill this line 
 sub.plot = pred.dat %>%
          mutate(strategy = as.factor(strategy),
                 item = as.factor(item)) %>%
   ggplot(aes(x = trial, color = strategy))+
   geom_point(aes(y=logRT))+
-  geom_line(aes(y=pred.logRT.de), color = 'green')+
-  geom_line(aes(y=pred.logRT.ps), color = 'blue')+
-  geom_vline(aes(xintercept=first.correct.trial.item))+
+  #geom_line(aes(y=pred.logRT.de), color = 'green')+
+  geom_line(aes(y=pred.logRT.ps), color = 'blue')+ # uncomment this after fixing left_join
+  #geom_vline(aes(xintercept=first.correct.trial.item))+
   facet_grid(subject~item)+
   theme_linedraw()
 
-sub.plot %>%  ggsave(filename=paste0('subj-item_',now(),'.pdf'),path='../plots/', width = 25, height = 40, device= 'pdf')
+sub.plot %>%  ggsave(filename=paste0('subj-item_PS_ALPHA_SIMPLE',now(),'.pdf'),path='../plots/', width = 25, height = 40, device= 'pdf')
 
 sub.plot
 ```
@@ -113,6 +117,13 @@ sub.plot.onlyRevert
 
 ## WAIC  
  
+```{r file locations}
+ps.orig = '../large_data/stanoutput_ps_Mon Nov 12 17:06:08 2018.rdata'
+ps.alpha = '../large_data/stanoutput_ps_alpha_Sat Jun 15 02:02:18 2019.rdata'
+de.orig = '../large_data/stanoutput_de_Thu Jun 13 05/57/58 2019.rdata'
+de.alpha = '../large_data/stanoutput_de_Mon Nov 12 21:47:55 2018.rdata'
+```
+
 
 ```{r}
 # PS log likelihood / waic
@@ -154,7 +165,7 @@ waic.ps.noReversions.alpha = waic.ps.noReversions.full.alpha$estimates['waic','E
 ```
 ```{r}
 # DE log likelihood / waic
-load(de.orig)
+#load(de.orig)
 log.lik.de = extract_log_lik(fit.de, parameter_name = "logLik", merge_chains = TRUE)
 waic.de.full = waic(log.lik.de)
 waic.de = waic.de.full$estimates['waic','Estimate']
@@ -175,7 +186,7 @@ waic.de.noReversions = waic.de.noReversions.full$estimates['waic','Estimate']
 # DE Alphabet data
 
 # DE log likelihood / waic
-load(de.alpha)
+#load(de.alpha)
 log.lik.de.alpha = extract_log_lik(fit.de, parameter_name = "logLik", merge_chains = TRUE)
 waic.de.full.alpha = waic(log.lik.de.alpha)
 waic.de.alpha = waic.de.full.alpha$estimates['waic','Estimate']

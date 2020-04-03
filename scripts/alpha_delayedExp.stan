@@ -11,6 +11,9 @@ data {
   int<lower=0> item[N]; // item for a given obs
   int<lower=0> subject[N]; // subject for a given obs
   int<lower=0> trial[N]; // trial for a given obs
+  int<lower=0> isAlg[N]; // whether strat==alg for a given obs
+  int<lower=0> isRet[N]; // whether strat==ret for a given obs
+  int<lower=0> isUnpr[N]; // whether strat was unprobed
 }
 
 parameters {
@@ -67,18 +70,8 @@ transformed parameters {
     Beta = exp(B + B_es[subject[i]] + B_ei[item[i]] + B_esi[si_lookup[subject[i], item[i]]]);
     log_Rate = R + R_es[subject[i]] + R_ei[item[i]] + R_esi[si_lookup[subject[i], item[i]]];
     log_Tau = T + T_es[subject[i]] + T_ei[item[i]] + T_esi[si_lookup[subject[i], item[i]]];
-    // Tau = exp(Tau*Rate)-2; // old transformed version
-    // print(log_Alpha[i]);
-    // print(log_Beta[i]);
-    // print(Tau[i]);
-    // print(Rate[i]);
-    // print(exp(log_Alpha[i]) + exp(log_Beta[i]) * (Tau[i]+1) / (Tau[i] + trial[i]^Rate[i]));
-    // print(log(exp(log_Alpha[i]) + exp(log_Beta[i]) * (Tau[i]+1) / (Tau[i] + trial[i]^Rate[i])));
-    // print("");
+
     y_hat[i] =  log(Alpha + Beta * (exp(log_Tau) + 1)/(exp(log_Tau) + exp(exp(log_Rate)*trial[i])));
-    // this resulted in no delayed start ever... : log(exp(log_Alpha) + (exp(log_Beta) * (exp(log_Tau) + 1) /(exp(log_Tau) + exp(log_Rate)*trial[i])));
-    // **old transformed version** log(exp(log_Alpha) + exp(log_Beta) * (Tau+1) / (Tau + trial[i]^Rate));
-    // go back to original version, but constrain Tau, Rate to be positive 
   }
 }
 

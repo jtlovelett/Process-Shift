@@ -43,9 +43,14 @@ gen_ProcShift_RTs <- function(trials,
       geom_point()+
       theme_linedraw()
   } else {
-    PS_dat
+    PS_dat %>%
+      transmute(su = 1,
+                b1 = trial,
+                item = 1,
+                strat = ifelse(strategy == 'alg', 1, 0))
   }
 }
 
-gen_ProcShift_RTs(trials, alg_mu, alg_sd, ret_rate=.2, p_ret_A =.1, ret_Alpha = 250, plot =T)
+
+#gen_ProcShift_RTs(trials, alg_mu, alg_sd, ret_rate=.2, p_ret_A =.1, ret_Alpha = 250, plot =T)
 

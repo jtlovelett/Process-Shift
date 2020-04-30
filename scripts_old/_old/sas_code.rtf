@@ -1,0 +1,230 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1561\cocoasubrtf200
+{\fonttbl\f0\fmodern\fcharset0 CourierNewPS-BoldMT;\f1\fmodern\fcharset0 CourierNewPSMT;\f2\fswiss\fcharset0 ArialMT;
+}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue109;\red255\green255\blue255;\red0\green0\blue0;
+\red0\green0\blue255;\red14\green110\blue109;\red26\green26\blue26;}
+{\*\expandedcolortbl;;\cssrgb\c0\c0\c50196;\cssrgb\c100000\c100000\c100000;\cssrgb\c0\c0\c0;
+\cssrgb\c0\c0\c100000;\cssrgb\c0\c50196\c50196;\cssrgb\c13333\c13333\c13333;}
+\margl1440\margr1440\vieww15300\viewh13340\viewkind0
+\deftab720
+\pard\pardeftab720\sl300\partightenfactor0
+
+\f0\b\fs26\fsmilli13333 \cf2 \cb3 \expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 proc
+\f1\b0 \cf4 \strokec4 \'a0
+\f0\b \cf2 \strokec2 mcmc
+\f1\b0 \cf4 \strokec4 \'a0\cf5 \strokec5 seed\cf4 \strokec4 =
+\f0\b \cf6 \strokec6 1
+\f1\b0 \cf4 \strokec4 \'a0\cf5 \strokec5 nbi\cf4 \strokec4 =
+\f0\b \cf6 \strokec6 10000
+\f1\b0 \cf4 \strokec4 \'a0\cf5 \strokec5 nmc\cf4 \strokec4 =
+\f0\b \cf6 \strokec6 100000
+\f1\b0 \cf4 \strokec4 \'a0\cf5 \strokec5 outpost\cf4 \strokec4 =newitem.shift_AllOut2;
+\f2\fs25\fsmilli12800 \cf7 \strokec7 \
+\pard\pardeftab720\sl300\partightenfactor0
+
+\f1\fs26\fsmilli13333 \cf4 \strokec4 \'a0
+\f2\fs25\fsmilli12800 \cf7 \strokec7 \
+\pard\pardeftab720\sl300\partightenfactor0
+
+\f1\fs26\fsmilli13333 \cf5 \strokec5 parms\cf4 \strokec4 \'a0 muH_mu\'a0\'a0 muH_var\'a0\'a0 MUvar_mu\'a0\'a0 MUvar_var\'a0\'a0
+\f2\fs25\fsmilli12800 \cf7 \strokec7 \
+\pard\pardeftab720\sl300\partightenfactor0
+
+\f1\fs26\fsmilli13333 \cf4 \strokec4 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0bH_mu\'a0\'a0\'a0 bH_var\'a0\'a0\'a0 bvar_mu\'a0\'a0\'a0 bvar_var
+\f2\fs25\fsmilli12800 \cf7 \strokec7 \
+
+\f1\fs26\fsmilli13333 \cf4 \strokec4 \'a0\'a0\'a0\'a0\'a0 \'a0\'a0\'a0 cH_mu\'a0\'a0\'a0 cH_var\'a0\'a0\'a0 cvar_mu\'a0\'a0\'a0 cvar_var\'a0\'a0
+\f2\fs25\fsmilli12800 \cf7 \strokec7 \
+
+\f1\fs26\fsmilli13333 \cf4 \strokec4 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0sigma2;
+\f2\fs25\fsmilli12800 \cf7 \strokec7 \
+
+\f1\fs26\fsmilli13333 \cf4 \strokec4 \'a0
+\f2\fs25\fsmilli12800 \cf7 \strokec7 \
+\pard\pardeftab720\sl300\partightenfactor0
+
+\f1\fs26\fsmilli13333 \cf5 \strokec5 hyperprior\cf4 \strokec4 \'a0muH_mu\'a0\'a0\'a0\'a0\'a0\'a0 ~\'a0\cf5 \strokec5 normal\cf4 \strokec4 (
+\f0\b \cf6 \strokec6 7000
+\f1\b0 \cf4 \strokec4 ,\'a0\'a0\'a0 var=
+\f0\b \cf6 \strokec6 1000000
+\f1\b0 \cf4 \strokec4 ,\'a0\'a0\'a0\'a0 lower=
+\f0\b \cf6 \strokec6 0
+\f1\b0 \cf4 \strokec4 );
+\f2\fs25\fsmilli12800 \cf7 \strokec7 \
+
+\f1\fs26\fsmilli13333 \cf5 \strokec5 hyperprior\cf4 \strokec4 \'a0muH_var\'a0\'a0\'a0\'a0\'a0 ~\'a0\cf5 \strokec5 normal\cf4 \strokec4 (
+\f0\b \cf6 \strokec6 100000
+\f1\b0 \cf4 \strokec4 ,\'a0 var=
+\f0\b \cf6 \strokec6 1000000000
+\f1\b0 \cf4 \strokec4 ,\'a0 lower=
+\f0\b \cf6 \strokec6 0
+\f1\b0 \cf4 \strokec4 );
+\f2\fs25\fsmilli12800 \cf7 \strokec7 \
+
+\f1\fs26\fsmilli13333 \cf5 \strokec5 hyperprior\cf4 \strokec4 \'a0MUvar_mu\'a0\'a0\'a0\'a0 ~\'a0\cf5 \strokec5 normal\cf4 \strokec4 (
+\f0\b \cf6 \strokec6 7000
+\f1\b0 \cf4 \strokec4 ,\'a0\'a0\'a0 var=
+\f0\b \cf6 \strokec6 1000000
+\f1\b0 \cf4 \strokec4 ,\'a0\'a0\'a0\'a0 lower=
+\f0\b \cf6 \strokec6 0
+\f1\b0 \cf4 \strokec4 );
+\f2\fs25\fsmilli12800 \cf7 \strokec7 \
+
+\f1\fs26\fsmilli13333 \cf5 \strokec5 hyperprior\cf4 \strokec4 \'a0MUvar_var\'a0\'a0 ~\'a0\cf5 \strokec5 normal\cf4 \strokec4 (
+\f0\b \cf6 \strokec6 100000
+\f1\b0 \cf4 \strokec4 ,\'a0 var=
+\f0\b \cf6 \strokec6 1000000000
+\f1\b0 \cf4 \strokec4 ,\'a0\'a0 lower=
+\f0\b \cf6 \strokec6 0
+\f1\b0 \cf4 \strokec4 );
+\f2\fs25\fsmilli12800 \cf7 \strokec7 \
+\
+
+\f1\fs26\fsmilli13333 \cf5 \strokec5 hyperprior\cf4 \strokec4 \'a0bH_mu\'a0\'a0\'a0\'a0\'a0\'a0\'a0 ~\'a0\cf5 \strokec5 normal\cf4 \strokec4 (
+\f0\b \cf6 \strokec6 3000
+\f1\b0 \cf4 \strokec4 ,\'a0\'a0\'a0 var=
+\f0\b \cf6 \strokec6 1000000
+\f1\b0 \cf4 \strokec4 ,\'a0\'a0\'a0\'a0 lower=
+\f0\b \cf6 \strokec6 0
+\f1\b0 \cf4 \strokec4 );
+\f2\fs25\fsmilli12800 \cf7 \strokec7 \
+
+\f1\fs26\fsmilli13333 \cf5 \strokec5 hyperprior\cf4 \strokec4 \'a0bH_var\'a0\'a0\'a0\'a0\'a0\'a0 ~\'a0\cf5 \strokec5 normal\cf4 \strokec4 (
+\f0\b \cf6 \strokec6 100000
+\f1\b0 \cf4 \strokec4 ,\'a0 var=
+\f0\b \cf6 \strokec6 1000000000
+\f1\b0 \cf4 \strokec4 ,\'a0 lower=
+\f0\b \cf6 \strokec6 0
+\f1\b0 \cf4 \strokec4 );
+\f2\fs25\fsmilli12800 \cf7 \strokec7 \
+
+\f1\fs26\fsmilli13333 \cf5 \strokec5 hyperprior\cf4 \strokec4 \'a0bvar_mu\'a0\'a0\'a0\'a0\'a0 ~\'a0\cf5 \strokec5 normal\cf4 \strokec4 (
+\f0\b \cf6 \strokec6 3000
+\f1\b0 \cf4 \strokec4 ,\'a0\'a0\'a0 var=
+\f0\b \cf6 \strokec6 1000000
+\f1\b0 \cf4 \strokec4 ,\'a0\'a0\'a0\'a0 lower=
+\f0\b \cf6 \strokec6 0
+\f1\b0 \cf4 \strokec4 );
+\f2\fs25\fsmilli12800 \cf7 \strokec7 \
+
+\f1\fs26\fsmilli13333 \cf5 \strokec5 hyperprior\cf4 \strokec4 \'a0bvar_var\'a0\'a0\'a0\'a0 ~\'a0\cf5 \strokec5 normal\cf4 \strokec4 (
+\f0\b \cf6 \strokec6 100000
+\f1\b0 \cf4 \strokec4 ,\'a0 var=
+\f0\b \cf6 \strokec6 1000000000
+\f1\b0 \cf4 \strokec4 ,\'a0 lower=
+\f0\b \cf6 \strokec6 0
+\f1\b0 \cf4 \strokec4 );
+\f2\fs25\fsmilli12800 \cf7 \strokec7 \
+\pard\pardeftab720\sl300\partightenfactor0
+
+\f1\fs26\fsmilli13333 \cf4 \strokec4 \'a0
+\f2\fs25\fsmilli12800 \cf7 \strokec7 \
+\pard\pardeftab720\sl300\partightenfactor0
+
+\f1\fs26\fsmilli13333 \cf5 \strokec5 hyperprior\cf4 \strokec4 \'a0cH_mu\'a0\'a0\'a0\'a0\'a0\'a0\'a0 ~\'a0\cf5 \strokec5 igamma\cf4 \strokec4 (
+\f0\b \cf6 \strokec6 .1
+\f1\b0 \cf4 \strokec4 ,\'a0\'a0\'a0\'a0\'a0 scale=
+\f0\b \cf6 \strokec6 .1
+\f1\b0 \cf4 \strokec4 );
+\f2\fs25\fsmilli12800 \cf7 \strokec7 \
+
+\f1\fs26\fsmilli13333 \cf5 \strokec5 hyperprior\cf4 \strokec4 \'a0cH_var\'a0\'a0\'a0\'a0\'a0\'a0 ~\'a0\cf5 \strokec5 igamma\cf4 \strokec4 (
+\f0\b \cf6 \strokec6 .1
+\f1\b0 \cf4 \strokec4 , \'a0\'a0\'a0\'a0\'a0scale=
+\f0\b \cf6 \strokec6 .1
+\f1\b0 \cf4 \strokec4 );
+\f2\fs25\fsmilli12800 \cf7 \strokec7 \
+
+\f1\fs26\fsmilli13333 \cf5 \strokec5 hyperprior\cf4 \strokec4 \'a0cvar_mu\'a0\'a0\'a0\'a0\'a0 ~\'a0\cf5 \strokec5 igamma\cf4 \strokec4 (
+\f0\b \cf6 \strokec6 .1
+\f1\b0 \cf4 \strokec4 ,\'a0\'a0\'a0\'a0\'a0 scale=
+\f0\b \cf6 \strokec6 .1
+\f1\b0 \cf4 \strokec4 );
+\f2\fs25\fsmilli12800 \cf7 \strokec7 \
+
+\f1\fs26\fsmilli13333 \cf5 \strokec5 hyperprior\cf4 \strokec4 \'a0cvar_var\'a0\'a0\'a0\'a0 ~\'a0\cf5 \strokec5 igamma\cf4 \strokec4 (
+\f0\b \cf6 \strokec6 .1
+\f1\b0 \cf4 \strokec4 ,\'a0\'a0\'a0\'a0\'a0 scale=
+\f0\b \cf6 \strokec6 .1
+\f1\b0 \cf4 \strokec4 );
+\f2\fs25\fsmilli12800 \cf7 \strokec7 \
+\
+\pard\pardeftab720\sl300\partightenfactor0
+
+\f1\fs26\fsmilli13333 \cf4 \strokec4 \'a0\cf5 \strokec5 prior\cf4 \strokec4 \'a0sigma2\'a0\'a0\'a0 ~\'a0\cf5 \strokec5 igamma\cf4 \strokec4 (shape=
+\f0\b \cf6 \strokec6 2
+\f1\b0 \cf4 \strokec4 , scale=
+\f0\b \cf6 \strokec6 2
+\f1\b0 \cf4 \strokec4 );
+\f2\fs25\fsmilli12800 \cf7 \strokec7 \
+
+\f1\fs26\fsmilli13333 \cf4 \strokec4 \'a0
+\f2\fs25\fsmilli12800 \cf7 \strokec7 \
+\pard\pardeftab720\sl300\partightenfactor0
+
+\f1\fs26\fsmilli13333 \cf5 \strokec5 random\cf4 \strokec4 \'a0mui\'a0\'a0\'a0\'a0\'a0 ~\'a0\cf5 \strokec5 normal\cf4 \strokec4 (muH_mu,\'a0\'a0\'a0\'a0\'a0\'a0\'a0 var = muH_var)\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\cf5 \strokec5 subject\cf4 \strokec4 =su;
+\f2\fs25\fsmilli12800 \cf7 \strokec7 \
+
+\f1\fs26\fsmilli13333 \cf5 \strokec5 random\cf4 \strokec4 \'a0bi\'a0\'a0\'a0\'a0\'a0\'a0 ~\'a0\cf5 \strokec5 normal\cf4 \strokec4 (bH_mu,\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 var = bH_var)\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\cf5 \strokec5 subject\cf4 \strokec4 =su;
+\f2\fs25\fsmilli12800 \cf7 \strokec7 \
+
+\f1\fs26\fsmilli13333 \cf5 \strokec5 random\cf4 \strokec4 \'a0ci\'a0\'a0\'a0\'a0\'a0\'a0 ~\'a0\cf5 \strokec5 normal\cf4 \strokec4 (cH_mu,\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 var = cH_var)\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\cf5 \strokec5 subject\cf4 \strokec4 =su;
+\f2\fs25\fsmilli12800 \cf7 \strokec7 \
+\pard\pardeftab720\sl300\partightenfactor0
+
+\f1\fs26\fsmilli13333 \cf4 \strokec4 \'a0
+\f2\fs25\fsmilli12800 \cf7 \strokec7 \
+\pard\pardeftab720\sl300\partightenfactor0
+
+\f1\fs26\fsmilli13333 \cf5 \strokec5 random\cf4 \strokec4 \'a0mui_var\'a0 ~\'a0\cf5 \strokec5 normal\cf4 \strokec4 (MUvar_mu,\'a0\'a0\'a0\'a0\'a0 var = MUvar_var)\'a0\'a0\'a0\'a0\'a0\'a0\cf5 \strokec5 subject\cf4 \strokec4 =su;
+\f2\fs25\fsmilli12800 \cf7 \strokec7 \
+
+\f1\fs26\fsmilli13333 \cf5 \strokec5 random\cf4 \strokec4 \'a0bi_var\'a0\'a0 ~\'a0\cf5 \strokec5 normal\cf4 \strokec4 (bvar_mu,\'a0\'a0 \'a0\'a0\'a0\'a0var = bvar_var)\'a0\'a0\'a0\'a0\'a0\'a0\'a0\cf5 \strokec5 subject\cf4 \strokec4 =su;
+\f2\fs25\fsmilli12800 \cf7 \strokec7 \
+
+\f1\fs26\fsmilli13333 \cf5 \strokec5 random\cf4 \strokec4 \'a0ci_var\'a0\'a0 ~\'a0\cf5 \strokec5 normal\cf4 \strokec4 (cvar_mu,\'a0\'a0\'a0\'a0\'a0 var = cvar_var)\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\cf5 \strokec5 subject\cf4 \strokec4 =su;
+\f2\fs25\fsmilli12800 \cf7 \strokec7 \
+\pard\pardeftab720\sl300\partightenfactor0
+
+\f1\fs26\fsmilli13333 \cf4 \strokec4 \'a0
+\f2\fs25\fsmilli12800 \cf7 \strokec7 \
+\pard\pardeftab720\sl300\partightenfactor0
+
+\f1\fs26\fsmilli13333 \cf5 \strokec5 random\cf4 \strokec4 \'a0muj\'a0\'a0\'a0\'a0\'a0 ~\'a0\cf5 \strokec5 normal\cf4 \strokec4 (mui,\'a0\'a0\'a0 var = mui_var)\'a0\'a0\cf5 \strokec5 subject\cf4 \strokec4 =item;
+\f2\fs25\fsmilli12800 \cf7 \strokec7 \
+
+\f1\fs26\fsmilli13333 \cf5 \strokec5 random\cf4 \strokec4 \'a0bj\'a0\'a0\'a0\'a0\'a0\'a0 ~\'a0\cf5 \strokec5 normal\cf4 \strokec4 (bi,\'a0\'a0\'a0\'a0 var = bi_var)\'a0\'a0\'a0\cf5 \strokec5 subject\cf4 \strokec4 =item;
+\f2\fs25\fsmilli12800 \cf7 \strokec7 \
+
+\f1\fs26\fsmilli13333 \cf5 \strokec5 random\cf4 \strokec4 \'a0cj\'a0\'a0\'a0\'a0\'a0\'a0 ~\'a0\cf5 \strokec5 normal\cf4 \strokec4 (ci,\'a0\'a0\'a0\'a0 var = ci_var)\'a0\'a0\'a0\cf5 \strokec5 subject\cf4 \strokec4 =item;
+\f2\fs25\fsmilli12800 \cf7 \strokec7 \
+\pard\pardeftab720\sl300\partightenfactor0
+
+\f1\fs26\fsmilli13333 \cf4 \strokec4 \'a0
+\f2\fs25\fsmilli12800 \cf7 \strokec7 \
+\pard\pardeftab720\sl300\partightenfactor0
+
+\f1\fs26\fsmilli13333 \cf5 \strokec5 if\cf4 \strokec4 \'a0strat=
+\f0\b \cf6 \strokec6 1
+\f1\b0 \cf4 \strokec4 \'a0\cf5 \strokec5 then\cf4 \strokec4 \'a0pred = muj;
+\f2\fs25\fsmilli12800 \cf7 \strokec7 \
+
+\f1\fs26\fsmilli13333 \cf5 \strokec5 if\cf4 \strokec4 \'a0strat=
+\f0\b \cf6 \strokec6 2
+\f1\b0 \cf4 \strokec4 \'a0\cf5 \strokec5 then\cf4 \strokec4 \'a0pred = bj*bl_r**-cj;\'a0
+\f2\fs25\fsmilli12800 \cf7 \strokec7 \
+\pard\pardeftab720\sl300\partightenfactor0
+
+\f1\fs26\fsmilli13333 \cf4 \strokec4 \'a0
+\f2\fs25\fsmilli12800 \cf7 \strokec7 \
+\pard\pardeftab720\sl300\partightenfactor0
+
+\f1\fs26\fsmilli13333 \cf5 \strokec5 model\cf4 \strokec4 \'a0RT ~\'a0\cf5 \strokec5 normal\cf4 \strokec4 (pred, var=sigma2);
+\f2\fs25\fsmilli12800 \cf7 \strokec7 \
+\pard\pardeftab720\sl300\partightenfactor0
+
+\f0\b\fs26\fsmilli13333 \cf2 \strokec2 run
+\f1\b0 \cf4 \strokec4 ;
+\f2\fs25\fsmilli12800 \cf7 \strokec7 \
+}

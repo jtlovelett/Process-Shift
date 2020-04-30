@@ -97,17 +97,18 @@ for(row in 1:nrow(pred.dat.de)){
   pred.dat.de[row,'pred.RT.de'] = exp(pred.dat.de[row,'pred.logRT.de'])
 }
 
-# sub.item.plot = pred.dat.de %>%
-#   mutate(strategy = as.factor(strategy)) %>%
-#   ggplot(aes(x = trial, color = strategy, group=strategy))+
-#   geom_point(aes(y=logRT))+
-#   geom_line(aes(y=pred.logRT.delExp), color = 'green')+
-#   geom_line(aes(y=pred.logRT.ps), color = 'blue')+
-#   #geom_vline(aes(xintercept=first.correct.trial.item))+
-#   facet_grid(subject~item)
+sub.item.plot = pred.dat.de %>%
+  mutate(strategy = as.factor(strategy)) %>%
+  ggplot(aes(x = trial, color = strategy, group=strategy))+
+  geom_point(aes(y=logRT))+
+  geom_line(aes(y=pred.logRT.delExp), color = 'green')+
+  geom_line(aes(y=pred.logRT.ps), color = 'blue')+
+  #geom_vline(aes(xintercept=first.correct.trial.item))+
+  facet_grid(subject~item)+
+  theme(text = element_text(size = 25))
 
 
-# sub.item.plot %>% ggsave(filename='mostRecentSubj.plot.preds_ps&de.pdf',path='../plots/', width = 25, height = 40, device= 'pdf')
+sub.item.plot %>% ggsave(filename='mostRecentSubj.plot.preds_ps&de.pdf',path='../plots/', width = 25, height = 40, device= 'pdf')
 
 save(list = c('pred.dat.de'), file = '../data/mostRecentPredDat_DE.rdata')
 

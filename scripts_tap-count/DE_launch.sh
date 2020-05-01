@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-Rscript D-fitModel_ssdre.R
+Rscript DE-fitModel_ssdre.R

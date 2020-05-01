@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-Rscript PS-fitStan_ssdre.R
+Rscript PS-fitModel_ssdre.R

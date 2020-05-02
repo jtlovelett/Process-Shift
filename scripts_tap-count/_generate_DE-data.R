@@ -19,9 +19,9 @@ rate <- .5
 
 
 #  general
-subjects <- 1:20
-items <- 1:10
-trials <- 1:100
+subjects <- 1:nsubs
+items <- 1:nitems
+trials <- 1:ntrials
 
 
 

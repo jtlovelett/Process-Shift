@@ -108,7 +108,7 @@ sub.item.plot = pred.dat.de %>%
   theme(text = element_text(size = 25))
 
 
-sub.item.plot %>% ggsave(filename='DE-plot.pdf',path='../output/', width = 25, height = 40, device= 'pdf')
+sub.item.plot %>% ggsave(filename='DE-plot.pdf',path='../output', width = 25, height = 40, device= 'pdf')
 
 save.image('../output/DE-postFitWorkspace.rdata')
 

@@ -96,7 +96,7 @@ for(row in 1:nrow(pred.dat.ps)){
   pred.dat.ps[row,'pred.RT.ps'] = exp(pred.dat.ps[row,'pred.logRT.ps'])
 }
 
-sub.item.plot = pred.dat %>%
+sub.item.plot = pred.dat.ps %>%
   mutate(strategy = as.factor(strategy)) %>%
   ggplot(aes(x = trial, color = strategy, group=strategy))+
   geom_point(aes(y=logRT))+

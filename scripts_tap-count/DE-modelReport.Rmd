@@ -1,0 +1,66 @@
+---
+title: "DE-modelReport"
+author: "Jarrett Lovelett"
+date: "`r format(Sys.time(), '%c')`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+memory.limit(size=999999)
+knitr::opts_chunk$set(echo = F, warning = F, message=F)
+library(tidyverse)
+library(rstan)
+library(bayesplot)
+library(loo)
+load('../output/DE-fitData.rdata')
+## should load:
+## fit.de (stan fit object)
+## pred.dat.de (predictions)
+## coefs.de (coefficients) (parameters?)
+```
+
+# Delayed Exponential Model Report
+
+## Stan Model
+```{r}
+print(fit.de@stanmodel)
+```
+
+## Model Fit to Data 
+```{r subItemPlot, fig.width = 50, fig.height = 50}
+pred.dat.de %>%
+  mutate(strategy = as.factor(strategy)) %>%
+  ggplot(aes(x = trial, color = strategy, group=strategy))+
+  geom_point(aes(y=RT))+
+  geom_line(aes(y=pred.RT.de), color = 'black')+
+  #geom_line(aes(y=pred.logRT.ps), color = 'blue')+
+  #geom_vline(aes(xintercept=first.correct.trial.item))+
+  facet_grid(subject~item)+
+  theme(text = element_text(size = 25),
+        legend.position='bottom')
+```
+
+## WAIC
+```{r}
+# log.lik.de = extract_log_lik(fit.de, parameter_name = "logLik", merge_chains = TRUE)
+# # waic.de.full = waic(log.lik.de)
+# # waic.de = waic.de.full$estimates['waic','Estimate']
+# loo.waic.de <- loo(log.lik.de)
+
+#WAIC for this fit is: `r loo.waic.de`.
+```
+
+## Parameter Plots
+```{r}
+try(mcmc_intervals(samples.de))
+
+
+try(mcmc_areas(samples.de))
+```
+
+## Diagnostics
+```{r}
+stan_diag(fit.de,
+            information = c("sample","stepsize", "treedepth","divergence"))
+```
+

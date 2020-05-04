@@ -77,12 +77,9 @@ fit.ps <- stan(
 # 
 # )
 
-#samples <- extract(fit) %>% as.data.frame()
-
 #params = get_sampler_params(fit) # apparently this is useful for something...
 
 coefs.ps = summary(fit.ps)$summary[,1] # pull out just the mean of each coef
-#coefs.de = summary(fit.de)$summary[,1] # pull out just the mean of each coef
 
 
 pred.dat.ps = dat %>%
@@ -96,18 +93,13 @@ for(row in 1:nrow(pred.dat.ps)){
   pred.dat.ps[row,'pred.RT.ps'] = exp(pred.dat.ps[row,'pred.logRT.ps'])
 }
 
-sub.item.plot = pred.dat.ps %>%
-  mutate(strategy = as.factor(strategy)) %>%
-  ggplot(aes(x = trial, color = strategy, group=strategy))+
-  geom_point(aes(y=logRT))+
-  #geom_line(aes(y=pred.logRT.delExp), color = 'green')+
-  geom_line(aes(y=pred.logRT.ps), color = 'blue')+
-  #geom_vline(aes(xintercept=first.correct.trial.item))+
-  facet_grid(subject~item)
+samples.ps <- extract(fit.ps, pars = c('Mu','Tau','Beta','y_hat','logLik','lp__')) %>% as.data.frame()
 
+# Save the relevant stuff
+save(list = c('fit.ps',
+              'pred.dat.ps',
+              'samples.ps'),
+     file = '../output/PS-fitData.rdata')
 
-sub.item.plot %>% ggsave(filename='PS-plot.pdf',path='../output/', width = 25, height = 40, device= 'pdf')
-
-save.image('../output/PS-postFitWorkspace.rdata')
-
-save(list = c('pred.dat.ps'), file = '../output/PS-predictions.rdata')
+# launch the report generator
+rmarkdown::render('PS-modelReport.Rmd', output_file = '../output/PS-ModelReport.html')

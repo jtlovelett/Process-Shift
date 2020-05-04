@@ -1,0 +1,12 @@
+name: generateProcShift_DelExpData
+title: generateProcShift_DelExpData
+username:
+account: jtlovelett
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 2241431
+bundleId: 3122085
+url: https://jtlovelett.shinyapps.io/generateProcShift_DelExpData/
+when: 1588968598.60988
+asMultiple: FALSE
+asStatic: FALSE

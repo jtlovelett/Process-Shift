@@ -1,0 +1,68 @@
+---
+title: "PS-modelReport"
+author: "Jarrett Lovelett"
+date: "`r format(Sys.time(), '%c')`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+memory.limit(size=999999)
+options(mc.cores = 4)
+knitr::opts_chunk$set(echo = F, warning = F, message=F)
+library(tidyverse)
+library(rstan)
+library(bayesplot)
+library(loo)
+load('../output/PS-fitData.rdata')
+## should load:
+## fit.ps (stan fit object)
+## pred.dat.ps (predictions)
+## coefs.ps (coefficients) (parameters?)
+```
+
+# Delayed Exponential Model Report
+
+## Stan Model
+```{r}
+print(fit.ps@stanmodel)
+```
+
+## Model Fit to Data 
+```{r subItemPlot, fig.width = 25, fig.height = 20}
+pred.dat.ps %>%
+  mutate(strategy = as.factor(strategy)) %>%
+  ggplot(aes(x = trial, color = strategy, group=strategy))+
+  geom_point(aes(y=RT))+
+  geom_line(aes(y=pred.RT.ps), color = 'black')+
+  #geom_line(aes(y=pred.logRT.ps), color = 'blue')+
+  #geom_vline(aes(xintercept=first.correct.trial.item))+
+  facet_grid(subject~item)+
+  theme(text = element_text(size = 25),
+        legend.position='bottom')
+```
+
+## WAIC
+```{r}
+# log.lik.ps = extract_log_lik(fit.ps, parameter_name = "logLik", merge_chains = TRUE)
+# # waic.ps.full = waic(log.lik.ps)
+# # waic.ps = waic.de.full$estimates['waic','Estimate']
+# loo.waic.ps <- loo(log.lik.ps)
+#```
+#WAIC for this fit is: `r loo.waic.ps`.
+```
+
+## Parameter Plots
+```{r}
+try(mcmc_intervals(samples.ps))
+
+try(mcmc_areas(
+  samples.ps
+))
+```
+
+## Diagnostics
+```{r}
+stan_diag(fit.ps,
+            information = c("sample","stepsize", "treedepth","divergence"))
+```
+

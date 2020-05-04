@@ -127,7 +127,7 @@ de.alpha = '../large_data/stanoutput_de_Mon Nov 12 21:47:55 2018.rdata'
 
 ```{r}
 # PS log likelihood / waic
-load(ps.orig)
+load(ps.orig) 
 log.lik.ps = extract_log_lik(fit.ps, parameter_name = "logLik", merge_chains = TRUE)
 waic.ps.full = waic(log.lik.ps)
 waic.ps = waic.ps.full$estimates['waic','Estimate']

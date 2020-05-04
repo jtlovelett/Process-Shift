@@ -51,37 +51,20 @@ options(mc.cores = parallel::detectCores())
 # To avoid recompilation of unchanged Stan programs, we recommend calling
 rstan_options(auto_write = TRUE)
 
-# fit.ps <- stan(
-#   file = './procShiftModel.stan',
-#   #model_code = mod,  # Stan program
-#   data = stan.data,    # named list of data
-#   chains = 4,             # number of Markov chains
-#   warmup = 1000,          # number of warmup iterations per chain
-#   iter = 3000,            # total number of iterations per chain
-#   cores = 4,              # number of cores
-#   refresh = 250,          # show progress every 'refresh' iterations
-#   control = list(adapt_delta = 0.99,  max_treedepth = 15)
-# )
-
 
 fit.de <- stan(
   file = './DE-modelSpec.stan',
   #model_code = mod,  # Stan program
   data = stan.data,    # named list of data
   chains = 4,             # number of Markov chains
-  warmup = 1500,          # number of warmup iterations per chain
-  iter = 3500,            # total number of iterations per chain
+  warmup = 150,#0,          # number of warmup iterations per chain
+  iter = 350,#0,            # total number of iterations per chain
   cores = 4,              # number of cores
-  refresh = 250,          # show progress every 'refresh' iterations
+  refresh = 25,#0,          # show progress every 'refresh' iterations
   control = list(adapt_delta = 0.9,  max_treedepth = 12)
-
 )
 
-#samples <- extract(fit) %>% as.data.frame()
 
-#params = get_sampler_params(fit) # apparently this is useful for something...
-
-#coefs.ps = summary(fit.ps)$summary[,1] # pull out just the mean of each coef
 coefs.de = summary(fit.de)$summary[,1] # pull out just the mean of each coef
 
 
@@ -89,7 +72,6 @@ pred.dat.de = dat %>%
   mutate_at(c('subject','item'), function(x) as.numeric(as.factor(x))) %>%
   mutate(strategy = as.integer(strategy == 'retrieval')+1,
          logRT = log(RT),
-         #pred.logRT.ps = NA,
          pred.logRT.de = NA)
 
 for(row in 1:nrow(pred.dat.de)){ 
@@ -97,22 +79,15 @@ for(row in 1:nrow(pred.dat.de)){
   pred.dat.de[row,'pred.RT.de'] = exp(pred.dat.de[row,'pred.logRT.de'])
 }
 
-sub.item.plot = pred.dat.de %>%
-  mutate(strategy = as.factor(strategy)) %>%
-  ggplot(aes(x = trial, color = strategy, group=strategy))+
-  geom_point(aes(y=logRT))+
-  geom_line(aes(y=pred.logRT.delExp), color = 'green')+
-  #geom_line(aes(y=pred.logRT.ps), color = 'blue')+
-  #geom_vline(aes(xintercept=first.correct.trial.item))+
-  facet_grid(subject~item)+
-  theme(text = element_text(size = 25))
+samples.de <- extract(fit.de) %>% as.data.frame()# , pars = c('')) # let's see if we can't get all the params with ss dre's RAM
 
+# Save the relevant stuff
+save(list = c('pred.dat.de',
+              'fit.de',
+              'samples.de'), 
+     file = '../output/DE-fitData.rdata')
 
-sub.item.plot %>% ggsave(filename='DE-plot.pdf',path='../output', width = 25, height = 40, device= 'pdf')
-
-save.image('../output/DE-postFitWorkspace.rdata')
-
-
-save(list = c('pred.dat.de'), file = '../output/DE-predictions.rdata')
+# launch the report generator
+rmarkdown::render('DE-modelReport.Rmd', output_file = '../output/DE-ModelReport.html')
 
 

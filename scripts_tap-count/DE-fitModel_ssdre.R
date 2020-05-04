@@ -102,7 +102,7 @@ sub.item.plot = pred.dat.de %>%
   ggplot(aes(x = trial, color = strategy, group=strategy))+
   geom_point(aes(y=logRT))+
   geom_line(aes(y=pred.logRT.delExp), color = 'green')+
-  geom_line(aes(y=pred.logRT.ps), color = 'blue')+
+  #geom_line(aes(y=pred.logRT.ps), color = 'blue')+
   #geom_vline(aes(xintercept=first.correct.trial.item))+
   facet_grid(subject~item)+
   theme(text = element_text(size = 25))

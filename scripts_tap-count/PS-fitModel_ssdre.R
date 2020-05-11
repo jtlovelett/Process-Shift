@@ -47,7 +47,7 @@ stan.data = list(y = log(dat$RT),
                  si_lookup = si.lookup
 )
 # For execution on a local, multicore CPU with excess RAM we recommend calling
-options(mc.cores = parallel::detectCores())
+# options(mc.cores = parallel::detectCores())
 # To avoid recompilation of unchanged Stan programs, we recommend calling
 rstan_options(auto_write = TRUE)
 

@@ -1,0 +1,5 @@
+print('rendering Process Shift report...')
+rmarkdown::render('PS-modelReport.Rmd', output_file = '../output/PS-ModelReport.html')
+print('rendering Delayed Exponential report...')
+rmarkdown::render('DE-modelReport.Rmd', output_file = '../output/DE-ModelReport.html')
+print('... done!')

@@ -6,8 +6,8 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-memory.limit(size=999999)
-options(mc.cores = 4)
+# memory.limit(size=999999)
+# options(mc.cores = 4)
 knitr::opts_chunk$set(echo = F, warning = F, message=F)
 library(tidyverse)
 library(rstan)

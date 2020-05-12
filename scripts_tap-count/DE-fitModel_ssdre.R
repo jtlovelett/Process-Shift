@@ -64,6 +64,7 @@ fit.de <- stan(
   control = list(adapt_delta = 0.9,  max_treedepth = 12)
 )
 
+#params = get_sampler_params(fit.de) 
 
 coefs.de = summary(fit.de)$summary[,1] # pull out just the mean of each coef
 

@@ -64,20 +64,7 @@ fit.ps <- stan(
 )
 
 
-# fit.de <- stan(
-#   file = './delayedExp.stan',
-#   #model_code = mod,  # Stan program
-#   data = stan.data,    # named list of data
-#   chains = 4,             # number of Markov chains
-#   warmup = 1000,          # number of warmup iterations per chain
-#   iter = 3000,            # total number of iterations per chain
-#   cores = 4,              # number of cores
-#   refresh = 250,          # show progress every 'refresh' iterations
-#   control = list(adapt_delta = 0.99,  max_treedepth = 15)
-# 
-# )
-
-#params = get_sampler_params(fit) # apparently this is useful for something...
+#params = get_sampler_params(fit.ps) 
 
 coefs.ps = summary(fit.ps)$summary[,1] # pull out just the mean of each coef
 

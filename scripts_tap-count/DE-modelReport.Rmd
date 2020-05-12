@@ -30,9 +30,9 @@ print(fit.de@stanmodel)
 ```{r subItemPlot, fig.width = 50, fig.height = 50}
 pred.dat.de %>%
   mutate(strategy = as.factor(strategy)) %>%
-  ggplot(aes(x = trial, color = strategy, group=strategy))+
-  geom_point(aes(y=RT))+
-  geom_line(aes(y=pred.RT.de), color = 'black')+
+  ggplot(aes(x = trial, color = strategy))+
+  geom_point(aes(y=RT), size = 1.5)+
+  geom_line(aes(y=pred.RT.de), size = 2, color = 'black')+
   #geom_line(aes(y=pred.logRT.ps), color = 'blue')+
   #geom_vline(aes(xintercept=first.correct.trial.item))+
   facet_grid(subject~item)+

@@ -10,7 +10,7 @@ output: html_document
 knitr::opts_chunk$set(echo = F, warning = F, message=F)
 library(tidyverse)
 library(rstan)
-library(bayesplot)
+#library(bayesplot)
 library(loo)
 load('../output/DE-fitData.rdata')
 ## should load:
@@ -27,20 +27,22 @@ print(fit.de@stanmodel)
 ```
 
 ## Model Fit to Data 
-```{r subItemPlot, fig.width = 50, fig.height = 50}
+```{r subItemPlot, fig.width = 75, fig.height = 75}
 pred.dat.de %>%
   mutate(strategy = as.factor(strategy)) %>%
   ggplot(aes(x = trial, color = strategy))+
-  geom_point(aes(y=RT), size = 1.5)+
-  geom_line(aes(y=pred.RT.de), size = 2, color = 'black')+
+  geom_point(aes(y=RT), size = 6)+
+  geom_line(aes(y=pred.RT.de), size = 3.5, color = 'black', alpha = .8)+
   #geom_line(aes(y=pred.logRT.ps), color = 'blue')+
   #geom_vline(aes(xintercept=first.correct.trial.item))+
   facet_grid(subject~item)+
-  theme(text = element_text(size = 25),
-        legend.position='bottom')
+  theme(text = element_text(size = 20),
+        legend.position='bottom',
+        legend.text = element_text(size = 30)
+        )
 ```
 
-## WAIC
+<!--## WAIC
 ```{r}
 # log.lik.de = extract_log_lik(fit.de, parameter_name = "logLik", merge_chains = TRUE)
 # # waic.de.full = waic(log.lik.de)
@@ -57,10 +59,102 @@ try(mcmc_intervals(samples.de))
 
 try(mcmc_areas(samples.de))
 ```
-
+-->
 ## Diagnostics
+```{r reformat summary}
+sum.de <- summary(fit.de)$summary
+param <- rownames(sum.de)
+sum.de <- cbind(param, sum.de) %>% as_tibble()
+sum.de <- sum.de %>%
+  filter(!startsWith(param, 'y_hat') & 
+           !startsWith(param, 'logLik')) %>%
+  rowwise() %>%
+  mutate(Parameter = case_when(startsWith(param, 'A') ~ 'Alpha',
+                               startsWith(param, 'B') ~ 'Beta',
+                               startsWith(param, 'T') ~ 'Tau',
+                               startsWith(param, 'R') ~ 'Rate',
+                               startsWith(param, 'sigma') ~ 'Sigma',
+                               startsWith(param, 'lp_') ~ 'Log Posterior',
+                               TRUE ~ 'Transformed')) 
+sum.de <- tibble(Parameter = sum.de$Parameter, 
+                 param = sum.de$param,
+                 as_tibble(
+                   lapply(
+                   select(sum.de, -Parameter, -param), 
+                   as.numeric)))
+
+# max and min Rhats to display on plots
+lims <- c(min(.8,min(sum.de$Rhat)),
+          max(2.2, max(sum.de$Rhat)))
+step <- .2
+```
+
+### Rhat distribution
+```{r rhat hist}
+
+sum.de %>% 
+  ggplot(aes(x= Rhat)) +
+  geom_histogram(bins=1000)+
+  geom_vline(aes(xintercept =1), linetype=2)+
+  scale_y_continuous("Num. params with Rhat = x", expand=c(0,0))+
+  scale_x_continuous(breaks = seq(lims[1],lims[2],step))+
+  theme_bw()
+```
+
+```{r rhat boxplot}
+sum.de %>%
+  ggplot(aes(x = Parameter, y = Rhat))+
+  geom_boxplot()+
+  geom_hline(aes(yintercept = 1),linetype =2)
+```
+
+### Rhats for component parameters
+
+Each spike represents the R-hat value for a particular component parameter. Below, very high values are examined more closely. 
 ```{r}
-stan_diag(fit.de,
-            information = c("sample","stepsize", "treedepth","divergence"))
+plots = sum.de %>% 
+  filter(!Parameter %in% c('Transformed', 'Log Posterior')) %>%
+  group_by(Parameter) %>%
+  do(plots = ggplot(data=., aes(x = param, y= Rhat)) +
+       geom_col()+
+       geom_hline(aes(yintercept = 1), linetype =2)+
+       ggtitle(unique(.$Parameter))+
+       xlab(paste0(.$Parameter, ' Components'))+
+       coord_cartesian( 
+         ylim = lims)+
+       theme(
+         axis.text.x = element_blank(),
+         axis.ticks.x = element_blank()
+       )
+     )
+lapply(1:length(plots$plots), function(plot){
+  plots$plots[[plot]]}) # lol
+
+```
+```{r}
+z.crit = 1.75 # what defines an extreme value?
+```
+
+### Extreme Rhat values (z.score(Rhat) > `r z.crit`)
+
+```{r}
+z.score <- function(x){
+  (x-mean(x))/sd(x)
+}
+
+extreme.rhats <- sum.de %>% 
+  mutate(Rhat.z = z.score(Rhat)) %>%
+  filter(abs(Rhat.z) > z.crit) %>%
+  arrange(Parameter,param) %>%
+  mutate(param = factor(param, levels = param))
+
+extreme.rhats %>%
+  ggplot(aes(x = param, y = Rhat))+
+  geom_col()+
+  geom_hline(aes(yintercept = 1),linetype =2)+
+  theme(
+         axis.text.x = element_text(size = 5, angle = 45, 
+                                    hjust = 1))
+knitr::kable(extreme.rhats)
 ```
 

@@ -20,49 +20,126 @@ load('../output/PS-fitData.rdata')
 ## coefs.ps (coefficients) (parameters?)
 ```
 
-# Delayed Exponential Model Report
+# Process Shift Model Report
 
 ## Stan Model
 ```{r}
 print(fit.ps@stanmodel)
 ```
 
+
 ## Model Fit to Data 
-```{r subItemPlot, fig.width = 25, fig.height = 20}
+```{r subItemPlot, fig.width = 75, fig.height = 75}
 pred.dat.ps %>%
   mutate(strategy = as.factor(strategy)) %>%
-  ggplot(aes(x = trial, color = strategy, group=strategy))+
-  geom_point(aes(y=RT))+
-  geom_line(aes(y=pred.RT.ps), color = 'black')+
-  #geom_line(aes(y=pred.logRT.ps), color = 'blue')+
-  #geom_vline(aes(xintercept=first.correct.trial.item))+
+  ggplot(aes(x = trial, group=strategy))+
+  geom_point(aes(y=RT, color= strategy), size = 6)+
+  geom_line(aes(y=pred.RT.ps, group=strategy), size = 3.5, color = 'black', alpha = .8)+
   facet_grid(subject~item)+
-  theme(text = element_text(size = 25),
-        legend.position='bottom')
+  theme(text = element_text(size = 20),
+        legend.position='bottom',
+        legend.text = element_text(size = 30)
+        )
 ```
 
-## WAIC
-```{r}
-# log.lik.ps = extract_log_lik(fit.ps, parameter_name = "logLik", merge_chains = TRUE)
-# # waic.ps.full = waic(log.lik.ps)
-# # waic.ps = waic.de.full$estimates['waic','Estimate']
-# loo.waic.ps <- loo(log.lik.ps)
-#```
-#WAIC for this fit is: `r loo.waic.ps`.
-```
-
-## Parameter Plots
-```{r}
-try(mcmc_intervals(samples.ps))
-
-try(mcmc_areas(
-  samples.ps
-))
-```
 
 ## Diagnostics
+```{r reformat summary}
+sum.ps <- summary(fit.ps)$summary
+param <- rownames(sum.ps)
+sum.ps <- cbind(param, sum.ps) %>% as_tibble()
+sum.ps <- sum.ps %>%
+  filter(!startsWith(param, 'y_hat') & 
+           !startsWith(param, 'logLik')) %>%
+  rowwise() %>%
+  mutate(Parameter = case_when(startsWith(param, 'Alg_M') ~ 'Alpha',
+                               startsWith(param, 'Ret_B') ~ 'Beta',
+                               startsWith(param, 'Ret_T') ~ 'Tau',
+                               startsWith(param, 'Ret_R') ~ 'Rate',
+                               startsWith(param, 'sigma') ~ 'Sigma',
+                               startsWith(param, 'lp_') ~ 'Log Posterior',
+                               TRUE ~ 'Transformed/Other')) 
+
+sum.ps <- tibble(Parameter = sum.ps$Parameter, 
+                 param = sum.ps$param,
+                 as_tibble(
+                   lapply(
+                   select(sum.ps, -Parameter, -param), 
+                   as.numeric)))
+
+# max and min Rhats to display on plots
+lims <- c(min(.8,min(sum.ps$Rhat)),
+          max(2.2, max(sum.ps$Rhat)))
+step <- .2
+```
+
+### Rhat distribution
+```{r rhat hist}
+
+sum.ps %>% 
+  ggplot(aes(x= Rhat)) +
+  geom_histogram(bins=1000)+
+  geom_vline(aes(xintercept =1), linetype=2)+
+  scale_y_continuous("Num. params with Rhat = x", expand=c(0,0))+
+  scale_x_continuous(breaks = seq(lims[1],lims[2],step))+
+  theme_bw()
+```
+
+```{r rhat boxplot}
+sum.ps %>%
+  ggplot(aes(x = Parameter, y = Rhat))+
+  geom_boxplot()+
+  geom_hline(aes(yintercept = 1),linetype =2)
+```
+
+### Rhats for component parameters
+
+Each spike represents the R-hat value for a particular component parameter. Below, very high values are examined more closely. 
 ```{r}
-stan_diag(fit.ps,
-            information = c("sample","stepsize", "treedepth","divergence"))
+plots = sum.ps %>% 
+  filter(!Parameter %in% c('Transformed', 'Log Posterior')) %>%
+  group_by(Parameter) %>%
+  do(plots = ggplot(data=., aes(x = param, y= Rhat)) +
+       geom_col()+
+       geom_hline(aes(yintercept = 1), linetype =2)+
+       ggtitle(unique(.$Parameter))+
+       xlab(paste0(.$Parameter, ' Components'))+
+       coord_cartesian( 
+         ylim = lims)+
+       theme(
+         axis.text.x = element_blank(),
+         axis.ticks.x = element_blank()
+       )
+     )
+lapply(1:length(plots$plots), function(plot){
+  plots$plots[[plot]]}) # lol
+
+```
+
+```{r}
+z.crit = 1.75 # what defines an extreme value?
+```
+
+### Extreme Rhat values (z.score(Rhat) > `r z.crit`)
+
+```{r}
+z.score <- function(x){
+  (x-mean(x))/sd(x)
+}
+
+extreme.rhats <- sum.ps %>% 
+  mutate(Rhat.z = z.score(Rhat)) %>%
+  filter(abs(Rhat.z) > z.crit) %>%
+  arrange(Parameter,param) %>%
+  mutate(param = factor(param, levels = param))
+
+extreme.rhats %>%
+  ggplot(aes(x = param, y = Rhat))+
+  geom_col()+
+  geom_hline(aes(yintercept = 1),linetype =2)+
+  theme(
+         axis.text.x = element_text(size = 5, angle = 45, 
+                                    hjust = 1))
+knitr::kable(extreme.rhats)
 ```
 

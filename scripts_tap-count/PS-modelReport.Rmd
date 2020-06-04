@@ -29,16 +29,16 @@ print(fit.ps@stanmodel)
 
 
 ## Model Fit to Data 
-```{r subItemPlot, fig.width = 75, fig.height = 75}
+```{r subItemPlot, fig.width = 150, fig.height = 150}
 pred.dat.ps %>%
   mutate(strategy = as.factor(strategy)) %>%
   ggplot(aes(x = trial, group=strategy))+
   geom_point(aes(y=RT, color= strategy), size = 6)+
-  geom_line(aes(y=pred.RT.ps, group=strategy), size = 3.5, color = 'black', alpha = .8)+
+  geom_line(aes(y=pred.RT.ps, group=strategy), size = 4.5, color = 'black', alpha = .8)+
   facet_grid(subject~item)+
-  theme(text = element_text(size = 20),
+  theme(text = element_text(size = 40),
         legend.position='bottom',
-        legend.text = element_text(size = 30)
+        legend.text = element_text(size = 50)
         )
 ```
 
@@ -75,7 +75,6 @@ step <- .2
 
 ### Rhat distribution
 ```{r rhat hist}
-
 sum.ps %>% 
   ggplot(aes(x= Rhat)) +
   geom_histogram(bins=1000)+
@@ -143,3 +142,60 @@ extreme.rhats %>%
 knitr::kable(extreme.rhats)
 ```
 
+```{r examine concerning params}
+weird.params <- c('Alg_M_esi[92]')
+extract_chains <- function(samps, n_warmup){
+  lapply(1:dim(samps)[3], function(i_param){# iterate over parameters
+    lapply(1:dim(samps)[2], function(j_chain){ # iterate over chains
+      tibble(param = dimnames(samps)$parameters[i_param], # get a dataframe of samples per chain...
+             chain = j_chain,
+             sample = samps[,j_chain,i_param],
+             index=1:length(sample),
+             isWarmup = index <= n_warmup)
+    }) %>% bind_rows() # ... and staple them together long-wise
+  }) # now we have a list (length = n params incldued) containing dataframes of indexed samples by chain
+}
+samps <- rstan::extract(fit.ps, pars = weird.params, permuted=FALSE, inc_warmup=TRUE)
+
+weird.chains <- extract_chains(samps, n_warmup = 1000)
+names(weird.chains) <- weird.params
+```
+
+```{r}
+lapply(names(weird.chains), function(param) {
+  weird.chains[[param]] %>%
+    filter(isWarmup==FALSE) %>%
+    ggplot(aes(x=index, y = sample),alpha=.5)+
+    geom_point()+
+    #geom_line()+
+    facet_grid(chain ~ .)+
+    ggtitle(paste0(param,' samples, by Chain'))
+})
+```
+
+### Raw Data for Alg_M_esi[92] col (item) = 5, row (subject) = 10
+#### (With neighbors for comparison)
+```{r}
+# I would also look at the raw data corresponding to esi[92] to see if there is a reason why the M parameter might be multimodal?
+# Take from original data to get subj-item matrix for lookup
+
+source('../scripts_general/mk_sparse_sub-item_matrix.R')
+# reverse lookup subject and item from subj-item vector index
+sub_item_esi_92 <- get_sub_item_from_siMat(92, siMat(pred.dat.ps))
+
+subj <- sub_item_esi_92['subject']
+it <- sub_item_esi_92['item']
+subj <- c(subj-1,subj, subj+1) # will fail stupidly if row or col is max or min... 
+it <- c(it-1,it, it+1)
+pred.dat.ps %>% 
+  filter(subject %in% subj,
+         item %in% it ) %>%
+  droplevels() %>%
+  mutate(strategy= as.factor(strategy)) %>%
+  ggplot(aes(x = trial, y = RT, color = strategy))+
+  geom_point()+
+  geom_line()+
+  facet_grid(subject ~ item)
+```
+
+Try doing least squares fits to DE data                   

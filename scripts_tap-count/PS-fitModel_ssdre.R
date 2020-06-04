@@ -57,7 +57,7 @@ fit.ps <- stan(
   data = stan.data,    # named list of data
   chains = 4,             # number of Markov chains
   warmup = 1000,          # number of warmup iterations per chain
-  iter = 3000,            # total number of iterations per chain
+  iter = 8000,            # total number of iterations per chain (temp increased from 3k to 8k)
   cores = 4,              # number of cores
   refresh = 250,          # show progress every 'refresh' iterations
   control = list(adapt_delta = 0.99,  max_treedepth = 15)

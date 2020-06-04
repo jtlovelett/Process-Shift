@@ -10,3 +10,9 @@ siMat <- function(dat){
   }
   si.lookup
 }
+
+get_sub_item_from_siMat <- function(idx, siMat){
+  indices <- which(siMat == idx, arr.ind = TRUE)
+  c(subject = indices[1],
+    item = indices[2])
+}

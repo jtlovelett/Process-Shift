@@ -27,18 +27,18 @@ print(fit.de@stanmodel)
 ```
 
 ## Model Fit to Data 
-```{r subItemPlot, fig.width = 75, fig.height = 75}
+```{r subItemPlot, fig.width = 100, fig.height = 100}
 pred.dat.de %>%
   mutate(strategy = as.factor(strategy)) %>%
   ggplot(aes(x = trial, color = strategy))+
-  geom_point(aes(y=RT), size = 6)+
-  geom_line(aes(y=pred.RT.de), size = 3.5, color = 'black', alpha = .8)+
+  geom_point(aes(y=RT), size = 15)+
+  geom_line(aes(y=pred.RT.de), size = 6, color = 'black', alpha = .8)+
   #geom_line(aes(y=pred.logRT.ps), color = 'blue')+
   #geom_vline(aes(xintercept=first.correct.trial.item))+
   facet_grid(subject~item)+
-  theme(text = element_text(size = 20),
+  theme(text = element_text(size = 75),
         legend.position='bottom',
-        legend.text = element_text(size = 30)
+        legend.text = element_text(size = 150)
         )
 ```
 
@@ -157,4 +157,103 @@ extreme.rhats %>%
                                     hjust = 1))
 knitr::kable(extreme.rhats)
 ```
+
+```{r}
+## Ed's comments
+# re. DE model:
+# it seems that there are specific subjects that have high R_hats for a bunch of parameters.  So, some subjects seem to converge just fine on all parameters, but others do not.   This might be a consequence of those subjects having data that really are not consistent with a DE model, so there are a bunch of ways you can get a DE model to provide an equally crappy fit to that subject....
+# 
+# I would do the following: calculate the average/sum of R_hat for all parameters at a given interaction level.
+# e.g., 
+# total_Rhat_esi[213] = A_esi[213]+R_esi[213]
+# total_Rhat_es[27] = B_es[13] + T_es[13] ...  etc.
+# If possible, I would even try to collapse these onto individual subjects, to sum all esi that apply to a particular es...
+# 
+# This would allow you to see if there are indeed particularly troublesome subjects, or items, or conditions, or something -- or if this is weird crazy fitting across the board.
+# 
+# If there are particularly troublesome subjects, it's worth looking at their data, maybe trying to fit their data in isolation to reproduce their behavior.  At some point we may just chalk it up to a model not being suitable for the data, and thus having convergence issues because of model issues....
+
+source('../scripts_general/mk_sparse_sub-item_matrix.R')
+siMat <- siMat(pred.dat.de)
+
+parameters <- c('Alpha','Beta','Tau','Rate')
+rhats.by.group <- sum.de %>%
+  filter(Parameter %in% parameters) %>%
+  separate(param, c('param','component'),'_') %>%
+  mutate(
+    level = case_when( # does this apply at the subject, item or subject-item level?
+      startsWith(component,'esi')~ 'interaction',
+      startsWith(component,'es') ~ 'subject',
+      startsWith(component,'ei') ~ 'item',
+      TRUE ~ NA_character_
+    )) %>%
+  filter(!is.na(component)) %>%
+  rowwise() %>%
+  mutate(
+    level_index = as.integer(regmatches(component,regexpr('[0-9]+',component))), # which subject, item, or combo is it?
+    subject = case_when(
+      level == 'subject' ~ level_index,
+      level == 'item' ~ NA_integer_,
+      level == 'interaction' ~ get_sub_item_from_siMat(level_index, siMat)['subject']
+    ),
+    item = case_when(
+      level == 'subject' ~ NA_integer_,
+      level == 'item' ~ level_index,
+      level == 'interaction' ~ get_sub_item_from_siMat(level_index, siMat)['item']
+    )) 
+```
+
+### Subject-level Rhats 
+
+```{r}
+sub.rhat <- rhats.by.group %>% 
+  filter(level == 'subject') %>%
+  group_by(subject) %>%
+  summarize(Rhat.sum = sum(Rhat),
+            count = n(),
+            Rhat.mean = Rhat.sum/count)
+
+sub.rhat %>%
+  ggplot(aes(x = subject, y = Rhat.mean))+
+  scale_x_continuous(breaks = 1:length(unique(sub.rhat$subject)))+
+  geom_col()+
+  geom_hline(aes(yintercept = 1),linetype =2)
+```
+
+### Item-level Rhats
+```{r}
+itm.rhat <- rhats.by.group %>% 
+  filter(level == 'item') %>%
+  group_by(item) %>%
+  summarize(Rhat.sum = sum(Rhat),
+            count = n(),
+            Rhat.mean = Rhat.sum/count)
+
+itm.rhat %>%
+  ggplot(aes(x = item, y = Rhat.mean))+
+  scale_x_continuous(breaks = 1:length(unique(itm.rhat$item)))+
+  geom_col()+
+  geom_hline(aes(yintercept = 1),linetype =2)
+
+```
+
+### Interaction Rhats (white = missing interaction level)
+```{r}
+int.rhat <- rhats.by.group %>% 
+  filter(level == 'interaction') %>%
+  group_by(subject,item) %>%
+  summarize(Rhat.sum = sum(Rhat),
+            count = n(),
+            Rhat.mean = Rhat.sum/count)
+
+int.rhat %>%
+  ggplot(aes(x = item, y = subject, fill = Rhat.mean)) +
+  scale_x_continuous(breaks = 1:length(unique(int.rhat$item)))+
+  scale_y_continuous(breaks = 1:length(unique(int.rhat$subject)))+
+  geom_tile(color='black')
+```
+
+
+
+
 

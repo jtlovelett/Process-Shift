@@ -76,12 +76,8 @@ sum.de <- sum.de %>%
                                startsWith(param, 'sigma') ~ 'Sigma',
                                startsWith(param, 'lp_') ~ 'Log Posterior',
                                TRUE ~ 'Transformed')) 
-sum.de <- tibble(Parameter = sum.de$Parameter, 
-                 param = sum.de$param,
-                 as_tibble(
-                   lapply(
-                   select(sum.de, -Parameter, -param), 
-                   as.numeric)))
+sum.de <- sum.de %>%
+  mutate_at(vars(-Parameter, -param), as.numeric)
 
 # max and min Rhats to display on plots
 lims <- c(min(.8,min(sum.de$Rhat)),
@@ -135,7 +131,7 @@ lapply(1:length(plots$plots), function(plot){
 z.crit = 1.75 # what defines an extreme value?
 ```
 
-### Extreme Rhat values (z.score(Rhat) > `r z.crit`)
+### Extreme Rhat values (Rhat > 1.1)
 
 ```{r}
 z.score <- function(x){
@@ -143,8 +139,8 @@ z.score <- function(x){
 }
 
 extreme.rhats <- sum.de %>% 
-  mutate(Rhat.z = z.score(Rhat)) %>%
-  filter(abs(Rhat.z) > z.crit) %>%
+  # mutate(Rhat.z = z.score(Rhat)) %>%
+  filter(Rhat > 1.1) %>%
   arrange(Parameter,param) %>%
   mutate(param = factor(param, levels = param))
 

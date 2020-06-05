@@ -60,12 +60,9 @@ sum.ps <- sum.ps %>%
                                startsWith(param, 'lp_') ~ 'Log Posterior',
                                TRUE ~ 'Transformed/Other')) 
 
-sum.ps <- tibble(Parameter = sum.ps$Parameter, 
-                 param = sum.ps$param,
-                 as_tibble(
-                   lapply(
-                   select(sum.ps, -Parameter, -param), 
-                   as.numeric)))
+
+sum.ps <- sum.ps %>%
+  mutate_at(vars(-Parameter, -param), as.numeric)
 
 # max and min Rhats to display on plots
 lims <- c(min(.8,min(sum.ps$Rhat)),
@@ -119,26 +116,31 @@ lapply(1:length(plots$plots), function(plot){
 z.crit = 1.75 # what defines an extreme value?
 ```
 
-### Extreme Rhat values (z.score(Rhat) > `r z.crit`)
-
+### Extreme Rhat values 
+Note: if all goes well, this will be empty
 ```{r}
+#(z.score(Rhat) > `r z.crit`)
 z.score <- function(x){
   (x-mean(x))/sd(x)
 }
 
 extreme.rhats <- sum.ps %>% 
-  mutate(Rhat.z = z.score(Rhat)) %>%
-  filter(abs(Rhat.z) > z.crit) %>%
+  filter(Rhat > 1.2) %>%
+  # mutate(Rhat.z = z.score(Rhat)) %>%
+  # filter(abs(Rhat.z) > z.crit) %>%
   arrange(Parameter,param) %>%
   mutate(param = factor(param, levels = param))
 
-extreme.rhats %>%
+if(nrow(extreme.rhats) > 0){
+  extreme.rhats %>%
   ggplot(aes(x = param, y = Rhat))+
   geom_col()+
   geom_hline(aes(yintercept = 1),linetype =2)+
   theme(
          axis.text.x = element_text(size = 5, angle = 45, 
                                     hjust = 1))
+}
+
 knitr::kable(extreme.rhats)
 ```
 
@@ -198,4 +200,4 @@ pred.dat.ps %>%
   facet_grid(subject ~ item)
 ```
 
-Try doing least squares fits to DE data                   
+Try doing least squares fits to DE data
